@@ -1,12 +1,17 @@
+/// SkillLink booking service.
+/// Central app state for bookings with local persistence.
+library;
+
 import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/booking.dart';
 import '../models/service_provider.dart';
-import '../data/sample_providers.dart';
+import 'storage_service.dart';
 
 /// Central app state for bookings. Notifies listeners whenever a booking
-/// is created or its status changes.
+/// is created or its status changes. Persists to local storage.
 class BookingService extends ChangeNotifier {
   BookingService._internal();
 
@@ -14,101 +19,97 @@ class BookingService extends ChangeNotifier {
 
   factory BookingService() => instance;
 
-  final List<Booking> _bookings = [
-    Booking(
-      id: 'b0001',
-      providerId: sampleProviders[3].id,
-      providerName: sampleProviders[3].name,
-      providerProfession: sampleProviders[3].profession,
-      providerImageUrl: sampleProviders[3].imageUrl,
-      serviceName: sampleProviders[3].category,
-      date: DateTime.now().add(const Duration(days: 2)),
-      timeSlot: '2:00 PM - 4:00 PM',
-      totalCost: sampleProviders[3].hourlyRate * 2,
-      status: BookingStatus.upcoming,
-      notes: 'Kick-off meeting for the app prototype.',
-    ),
-    Booking(
-      id: 'b0002',
-      providerId: sampleProviders[2].id,
-      providerName: sampleProviders[2].name,
-      providerProfession: sampleProviders[2].profession,
-      providerImageUrl: sampleProviders[2].imageUrl,
-      serviceName: sampleProviders[2].category,
-      date: DateTime.now().subtract(const Duration(days: 7)),
-      timeSlot: '10:00 AM - 11:00 AM',
-      totalCost: sampleProviders[2].hourlyRate,
-      status: BookingStatus.completed,
-      notes: 'Calculus review session.',
-    ),
-    Booking(
-      id: 'b0003',
-      providerId: sampleProviders[6].id,
-      providerName: sampleProviders[6].name,
-      providerProfession: sampleProviders[6].profession,
-      providerImageUrl: sampleProviders[6].imageUrl,
-      serviceName: sampleProviders[6].category,
-      date: DateTime.now().subtract(const Duration(days: 21)),
-      timeSlot: '4:00 PM - 6:00 PM',
-      totalCost: sampleProviders[6].hourlyRate * 2,
-      status: BookingStatus.cancelled,
-      notes: '',
-    ),
-  ];
+  final StorageService _storage = StorageService.instance;
 
-  List<Booking> get bookings => List.unmodifiable(_bookings);
+  List<Booking> get bookings => _storage.bookings;
 
-  List<Booking> get upcomingBookings =>
-      _bookings.where((b) => b.status == BookingStatus.upcoming).toList();
+  List<Booking> get upcomingBookings => _storage.upcomingBookings;
 
-  List<Booking> get pastBookings => _bookings
-      .where((b) =>
-          b.status == BookingStatus.completed ||
-          b.status == BookingStatus.cancelled)
-      .toList();
+  List<Booking> get pastBookings => _storage.pastBookings;
 
-  void createBooking({
+  List<Booking> getBookingsByStatus(BookingStatus status) {
+    return _storage.getBookingsByStatus(status);
+  }
+
+  /// Initialize the service (loads from storage)
+  Future<void> initialize() async {
+    await _storage.initialize();
+    // Listen to storage changes and notify
+    _storage.addListener(_onStorageChanged);
+  }
+
+  void _onStorageChanged() {
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _storage.removeListener(_onStorageChanged);
+    super.dispose();
+  }
+
+  /// Create a new booking request
+  Booking createBooking({
     required ServiceProvider provider,
     required DateTime date,
     required String timeSlot,
     required int durationHours,
+    required String customerName,
+    required String customerPhone,
+    required String serviceLocation,
     String notes = '',
   }) {
     final booking = Booking(
       id: 'b$_nextId',
+      reference: generateReference(),
       providerId: provider.id,
       providerName: provider.name,
       providerProfession: provider.profession,
       providerImageUrl: provider.imageUrl,
       serviceName: provider.category,
-      date: date,
-      timeSlot: timeSlot,
-      totalCost: provider.hourlyRate * durationHours,
-      status: BookingStatus.upcoming,
-      notes: notes,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      preferredDate: date,
+      preferredTime: timeSlot,
+      serviceLocation: serviceLocation,
+      additionalDetails: notes,
+      estimatedPrice: provider.price * durationHours,
+      status: BookingStatus.pending,
+      createdAt: DateTime.now(),
     );
-    _bookings.insert(0, booking);
-    notifyListeners();
+    _storage.createBooking(booking);
+
+    // Save user info for future bookings
+    _storage.saveUserInfo(name: customerName, phone: customerPhone);
+    return booking;
   }
 
+  /// Cancel a booking
   void cancelBooking(String id) {
-    final index = _bookings.indexWhere((b) => b.id == id);
-    if (index == -1) return;
-    _bookings[index] = _bookings[index].copyWith(status: BookingStatus.cancelled);
-    notifyListeners();
+    _storage.cancelBooking(id);
   }
 
+  /// Mark booking as completed
   void markCompleted(String id) {
-    final index = _bookings.indexWhere((b) => b.id == id);
-    if (index == -1) return;
-    _bookings[index] = _bookings[index].copyWith(status: BookingStatus.completed);
-    notifyListeners();
+    _storage.completeBooking(id);
   }
 
+  /// Update booking status
+  void updateBookingStatus(String id, BookingStatus status) {
+    _storage.updateBookingStatus(id, status);
+  }
+
+  /// Generate a human-readable booking reference
   String generateReference() {
     final rand = Random.secure();
     return 'SL${rand.nextInt(90000) + 10000}';
   }
 
-  int get _nextId => _bookings.length + 1;
+  int get _nextId => _storage.bookings.length + 1;
+
+  /// Get user's saved name
+  String get savedUserName => _storage.userName;
+
+  /// Get user's saved phone
+  String get savedUserPhone => _storage.userPhone;
 }

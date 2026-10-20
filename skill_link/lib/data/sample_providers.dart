@@ -1,190 +1,305 @@
+/// SkillLink sample data for Ethiopian market (Addis Ababa).
+/// Contains service categories and demonstration providers.
+library;
+
 import 'package:flutter/material.dart';
 
 import '../models/service_provider.dart';
 
 class ProviderCategory {
-  const ProviderCategory({required this.name, required this.icon});
+  const ProviderCategory({
+    required this.name,
+    required this.icon,
+    this.description,
+  });
 
   final String name;
   final IconData icon;
+  final String? description;
 }
 
 const List<ProviderCategory> providerCategories = [
-  ProviderCategory(name: 'Plumbing', icon: Icons.plumbing),
-  ProviderCategory(name: 'Electrician', icon: Icons.electrical_services),
-  ProviderCategory(name: 'Tutoring', icon: Icons.school),
-  ProviderCategory(name: 'Web Development', icon: Icons.code),
-  ProviderCategory(name: 'Graphic Design', icon: Icons.brush),
-  ProviderCategory(name: 'Carpentry', icon: Icons.carpenter),
-  ProviderCategory(name: 'Photography', icon: Icons.camera_alt),
-  ProviderCategory(name: 'Cleaning', icon: Icons.cleaning_services),
+  ProviderCategory(name: 'All', icon: Icons.apps, description: 'All services'),
+  ProviderCategory(
+    name: 'Tutoring',
+    icon: Icons.school_rounded,
+    description: 'Academic tutoring & test prep',
+  ),
+  ProviderCategory(
+    name: 'Photography',
+    icon: Icons.camera_alt_rounded,
+    description: 'Events, portraits, commercial',
+  ),
+  ProviderCategory(
+    name: 'Electrical',
+    icon: Icons.electrical_services_rounded,
+    description: 'Wiring, repairs, installations',
+  ),
+  ProviderCategory(
+    name: 'Plumbing',
+    icon: Icons.plumbing_rounded,
+    description: 'Pipes, leaks, installations',
+  ),
+  ProviderCategory(
+    name: 'Graphic Design',
+    icon: Icons.design_services_rounded,
+    description: 'Logos, branding, marketing',
+  ),
+  ProviderCategory(
+    name: 'Cleaning',
+    icon: Icons.cleaning_services_rounded,
+    description: 'Home & office cleaning',
+  ),
+];
+
+// Category names for filtering (excluding 'All')
+const List<String> serviceCategoryNames = [
+  'Tutoring',
+  'Photography',
+  'Electrical',
+  'Plumbing',
+  'Graphic Design',
+  'Cleaning',
 ];
 
 const List<ServiceProvider> sampleProviders = [
   ServiceProvider(
     id: 'p001',
-    name: 'Sarah Mitchell',
-    profession: 'Senior Plumber',
-    category: 'Plumbing',
-    rating: 4.9,
-    reviewCount: 148,
-    hourlyRate: 45,
-    location: 'Downtown',
+    name: 'Hana Tesfaye',
+    profession: 'Mathematics Tutor',
+    category: 'Tutoring',
+    description:
+        'Experienced mathematics tutor specializing in high school and university-level calculus, algebra, and statistics. I help students build strong foundations and confidence in math through personalized lesson plans and patient guidance.',
+    location: 'Bole, Addis Ababa',
+    price: 350,
+    priceUnit: '/hour',
+    rating: 4.8,
+    reviewCount: 42,
+    experienceYears: 5,
     imageUrl: 'https://i.pravatar.cc/300?img=47',
-    about:
-        'Licensed plumber with over 10 years of residential and commercial '
-        'experience. Fast response times, transparent pricing, and a '
-        'satisfaction guarantee on every job.',
-    skills: ['Leak repair', 'Pipe installation', 'Water heaters', 'Drain cleaning'],
+    isFeatured: true,
     isVerified: true,
-    isPremium: true,
+    availability: 'Mon-Sat 9AM-7PM',
   ),
   ServiceProvider(
     id: 'p002',
-    name: 'James Okafor',
-    profession: 'Certified Electrician',
-    category: 'Electrician',
-    rating: 4.8,
-    reviewCount: 112,
-    hourlyRate: 55,
-    location: 'Riverside',
+    name: 'Dawit Bekele',
+    profession: 'Professional Photographer',
+    category: 'Photography',
+    description:
+        'Award-winning photographer with 8 years of experience capturing weddings, corporate events, portraits, and commercial projects. I bring a creative eye and professional equipment to every session, delivering high-quality images within 48 hours.',
+    location: 'Kazanchis, Addis Ababa',
+    price: 2000,
+    priceUnit: '/session',
+    rating: 4.7,
+    reviewCount: 89,
+    experienceYears: 8,
     imageUrl: 'https://i.pravatar.cc/300?img=12',
-    about:
-        'Certified master electrician specializing in home rewiring, panel '
-        'upgrades, and smart home installations. Fully insured and bonded.',
-    skills: ['Panel upgrades', 'Lighting design', 'Smart home', 'Safety inspections'],
+    isFeatured: true,
     isVerified: true,
+    availability: 'Daily 8AM-8PM (by appointment)',
   ),
   ServiceProvider(
     id: 'p003',
-    name: 'Emily Chen',
-    profession: 'Math & Physics Tutor',
-    category: 'Tutoring',
-    rating: 5.0,
-    reviewCount: 203,
-    hourlyRate: 30,
-    location: 'University District',
-    imageUrl: 'https://i.pravatar.cc/300?img=5',
-    about:
-        'PhD candidate with 6 years of tutoring experience. I break complex '
-        'concepts into intuitive pieces and tailor every session to the '
-        'student’s learning style.',
-    skills: ['Calculus', 'Physics', 'Exam prep', 'Study planning'],
+    name: 'Samuel Girma',
+    profession: 'Certified Electrician',
+    category: 'Electrical',
+    description:
+        'Licensed electrician with 10+ years of experience in residential and commercial electrical systems. Specializing in wiring, panel upgrades, lighting design, and safety inspections. Fully insured and committed to quality workmanship.',
+    location: 'Sar Bet, Addis Ababa',
+    price: 500,
+    priceUnit: '/service',
+    rating: 4.6,
+    reviewCount: 67,
+    experienceYears: 10,
+    imageUrl: 'https://i.pravatar.cc/300?img=33',
+    isFeatured: false,
     isVerified: true,
-    isPremium: true,
+    availability: 'Mon-Sat 8AM-6PM, Emergency 24/7',
   ),
   ServiceProvider(
     id: 'p004',
-    name: 'Marcus Reid',
-    profession: 'Full-Stack Developer',
-    category: 'Web Development',
-    rating: 4.7,
-    reviewCount: 87,
-    hourlyRate: 60,
-    location: 'Remote',
-    imageUrl: 'https://i.pravatar.cc/300?img=33',
-    about:
-        'Full-stack developer focused on modern web apps with Flutter and '
-        'backend integrations. I ship clean, well-tested code on tight '
-        'deadlines.',
-    skills: ['Flutter', 'REST APIs', 'Firebase', 'CI/CD'],
+    name: 'Meron Alemu',
+    profession: 'Graphic Designer',
+    category: 'Graphic Design',
+    description:
+        'Creative graphic designer helping businesses build strong visual identities. Expertise in logo design, brand guidelines, marketing materials, and social media content. I work closely with clients to bring their vision to life.',
+    location: 'Addis Ababa',
+    price: 600,
+    priceUnit: '/project',
+    rating: 4.9,
+    reviewCount: 34,
+    experienceYears: 4,
+    imageUrl: 'https://i.pravatar.cc/300?img=44',
+    isFeatured: true,
     isVerified: true,
+    availability: 'Mon-Fri 9AM-6PM',
   ),
   ServiceProvider(
     id: 'p005',
-    name: 'Ava Thompson',
-    profession: 'Graphic Designer',
-    category: 'Graphic Design',
-    rating: 4.6,
-    reviewCount: 95,
-    hourlyRate: 35,
-    location: 'Harbor Side',
-    imageUrl: 'https://i.pravatar.cc/300?img=44',
-    about:
-        'Brand-focused designer helping small businesses stand out with '
-        'memorable logos, packaging, and social media visuals.',
-    skills: ['Logo design', 'Brand identity', 'Illustrations', 'Social media kits'],
-    isVerified: false,
+    name: 'Abel Worku',
+    profession: 'Plumbing Specialist',
+    category: 'Plumbing',
+    description:
+        'Professional plumber with expertise in residential and commercial plumbing systems. From leak repairs and drain cleaning to new installations and bathroom renovations. Fast response, transparent pricing, and guaranteed work.',
+    location: 'Addis Ababa',
+    price: 450,
+    priceUnit: '/service',
+    rating: 4.5,
+    reviewCount: 53,
+    experienceYears: 7,
+    imageUrl: 'https://i.pravatar.cc/300?img=15',
+    isFeatured: false,
+    isVerified: true,
+    availability: 'Mon-Sat 8AM-7PM, Emergency 24/7',
   ),
   ServiceProvider(
     id: 'p006',
-    name: 'Daniel Brooks',
-    profession: 'Master Carpenter',
-    category: 'Carpentry',
-    rating: 4.9,
-    reviewCount: 76,
-    hourlyRate: 40,
-    location: 'Westgate',
-    imageUrl: 'https://i.pravatar.cc/300?img=15',
-    about:
-        'Third-generation carpenter crafting custom furniture, shelving, and '
-        'precision trim work. Every project is finished by hand.',
-    skills: ['Custom furniture', 'Deck building', 'Trim & molding', 'Repairs'],
+    name: 'Bethlehem Tadesse',
+    profession: 'English Tutor',
+    category: 'Tutoring',
+    description:
+        'Certified English language tutor helping students improve their speaking, writing, and comprehension skills. Specializes in IELTS/TOEFL preparation, business English, and academic writing. Patient, encouraging, and results-oriented.',
+    location: 'Addis Ababa',
+    price: 300,
+    priceUnit: '/hour',
+    rating: 4.7,
+    reviewCount: 28,
+    experienceYears: 3,
+    imageUrl: 'https://i.pravatar.cc/300?img=5',
+    isFeatured: true,
     isVerified: true,
+    availability: 'Mon-Sun 10AM-8PM',
   ),
   ServiceProvider(
     id: 'p007',
-    name: 'Sofia Ramirez',
-    profession: 'Event Photographer',
-    category: 'Photography',
-    rating: 4.8,
-    reviewCount: 134,
-    hourlyRate: 50,
-    location: 'Downtown',
-    imageUrl: 'https://i.pravatar.cc/300?img=45',
-    about:
-        'Story-driven photographer covering weddings, corporate events, and '
-        'portraits. Galleries delivered within 48 hours.',
-    skills: ['Portraits', 'Events', 'Editing', 'Lifestyle shoots'],
+    name: 'Yared Kebede',
+    profession: 'Physics & Chemistry Tutor',
+    category: 'Tutoring',
+    description:
+        'University-level physics and chemistry tutor with a master\'s degree in Applied Physics. I simplify complex concepts and provide structured problem-solving approaches for high school and undergraduate students.',
+    location: 'Piazza, Addis Ababa',
+    price: 400,
+    priceUnit: '/hour',
+    rating: 4.9,
+    reviewCount: 31,
+    experienceYears: 6,
+    imageUrl: 'https://i.pravatar.cc/300?img=59',
+    isFeatured: false,
     isVerified: true,
-    isPremium: true,
+    availability: 'Tue-Sun 2PM-9PM',
   ),
   ServiceProvider(
     id: 'p008',
-    name: 'Liam Foster',
-    profession: 'Home Cleaning Pro',
-    category: 'Cleaning',
-    rating: 4.5,
-    reviewCount: 210,
-    hourlyRate: 25,
-    location: 'Midtown',
-    imageUrl: 'https://i.pravatar.cc/300?img=59',
-    about:
-        'Detail-oriented home cleaner with eco-friendly products and '
-        'flexible scheduling, including same-day service.',
-    skills: ['Deep cleaning', 'Move-out cleaning', 'Eco products', 'Same-day service'],
-    isVerified: false,
+    name: 'Selamawit Haile',
+    profession: 'Event Photographer',
+    category: 'Photography',
+    description:
+        'Specialized in cultural events, weddings, and corporate photography. I capture authentic moments with a documentary style. Packages include edited digital gallery, prints, and optional album design.',
+    location: 'Bole, Addis Ababa',
+    price: 2500,
+    priceUnit: '/session',
+    rating: 4.6,
+    reviewCount: 45,
+    experienceYears: 5,
+    imageUrl: 'https://i.pravatar.cc/300?img=45',
+    isFeatured: false,
+    isVerified: true,
+    availability: 'By appointment only',
   ),
   ServiceProvider(
     id: 'p009',
-    name: 'Nadia Petrova',
-    profession: 'Math & Science Tutor',
-    category: 'Tutoring',
-    rating: 4.9,
-    reviewCount: 61,
-    hourlyRate: 28,
-    location: 'North Hills',
+    name: 'Tesfaye Lemma',
+    profession: 'Senior Electrician',
+    category: 'Electrical',
+    description:
+        'Master electrician with 15 years of experience in industrial and residential electrical work. Expert in solar installations, backup power systems, and smart home automation. Safety-first approach with all certifications current.',
+    location: 'Kirkos, Addis Ababa',
+    price: 600,
+    priceUnit: '/service',
+    rating: 4.8,
+    reviewCount: 72,
+    experienceYears: 15,
     imageUrl: 'https://i.pravatar.cc/300?img=16',
-    about:
-        'Former high school teacher tutoring chemistry, biology, and math. '
-        'I focus on building confidence and long-term understanding.',
-    skills: ['Chemistry', 'Biology', 'Algebra', 'Test prep'],
+    isFeatured: true,
     isVerified: true,
+    availability: 'Mon-Sat 7AM-5PM',
   ),
   ServiceProvider(
     id: 'p010',
-    name: 'Ethan Cole',
-    profession: 'Emergency Plumber',
+    name: 'Rahel Mohammed',
+    profession: 'Plumbing & Drainage Expert',
     category: 'Plumbing',
-    rating: 4.6,
-    reviewCount: 99,
-    hourlyRate: 50,
-    location: 'Eastport',
-    imageUrl: 'https://i.pravatar.cc/300?img=53',
-    about:
-        '24/7 emergency plumber specializing in burst pipes and urgent '
-        'repairs. On call nights and weekends with no after-hours surcharge.',
-    skills: ['Emergency repairs', 'Burst pipes', 'Bathroom fitting', 'Inspections'],
+    description:
+        'Specialized in drainage systems, water supply, and bathroom/kitchen plumbing renovations. Uses modern diagnostic equipment for accurate problem detection. Offers maintenance plans for commercial properties.',
+    location: 'Lideta, Addis Ababa',
+    price: 550,
+    priceUnit: '/service',
+    rating: 4.7,
+    reviewCount: 38,
+    experienceYears: 9,
+    imageUrl: 'https://i.pravatar.cc/300?img=46',
+    isFeatured: false,
     isVerified: true,
+    availability: 'Mon-Fri 8AM-6PM',
+  ),
+  ServiceProvider(
+    id: 'p011',
+    name: 'Mekdes Assefa',
+    profession: 'Brand & UI Designer',
+    category: 'Graphic Design',
+    description:
+        'Product designer focused on brand identity, UI/UX design, and digital products. Worked with startups and established businesses across Ethiopia. Delivers design systems, prototypes, and production-ready assets.',
+    location: 'Kazanchis, Addis Ababa',
+    price: 800,
+    priceUnit: '/project',
+    rating: 4.8,
+    reviewCount: 22,
+    experienceYears: 4,
+    imageUrl: 'https://i.pravatar.cc/300?img=53',
+    isFeatured: false,
+    isVerified: true,
+    availability: 'Mon-Fri 9AM-5PM',
+  ),
+  ServiceProvider(
+    id: 'p012',
+    name: 'Daniel Getachew',
+    profession: 'Home Cleaning Specialist',
+    category: 'Cleaning',
+    description:
+        'Professional home cleaning service with eco-friendly products and attention to detail. Services include deep cleaning, move-in/move-out cleaning, and regular maintenance. Flexible scheduling and satisfaction guaranteed.',
+    location: 'Bole, Addis Ababa',
+    price: 400,
+    priceUnit: '/service',
+    rating: 4.6,
+    reviewCount: 61,
+    experienceYears: 3,
+    imageUrl: 'https://i.pravatar.cc/300?img=52',
+    isFeatured: false,
+    isVerified: false,
+    availability: 'Daily 7AM-7PM',
   ),
 ];
+
+/// Helper to get providers by category
+List<ServiceProvider> getProvidersByCategory(String category) {
+  if (category == 'All') return sampleProviders;
+  return sampleProviders.where((p) => p.category == category).toList();
+}
+
+/// Helper to get featured providers
+List<ServiceProvider> getFeaturedProviders() {
+  return sampleProviders.where((p) => p.isFeatured).toList();
+}
+
+/// Helper to search providers
+List<ServiceProvider> searchProviders(String query) {
+  final q = query.toLowerCase().trim();
+  if (q.isEmpty) return sampleProviders;
+  return sampleProviders.where((p) {
+    return p.name.toLowerCase().contains(q) ||
+        p.profession.toLowerCase().contains(q) ||
+        p.category.toLowerCase().contains(q) ||
+        p.location.toLowerCase().contains(q);
+  }).toList();
+}

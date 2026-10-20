@@ -5,11 +5,7 @@ import '../screens/provider_details_screen.dart';
 
 /// Horizontally scrollable list of providers displayed as summary cards.
 class ProviderCard extends StatelessWidget {
-  const ProviderCard({
-    super.key,
-    required this.provider,
-    this.onTap,
-  });
+  const ProviderCard({super.key, required this.provider, this.onTap});
 
   final ServiceProvider provider;
 
@@ -34,10 +30,7 @@ class ProviderCard extends StatelessWidget {
       color: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(
-          color: theme.colorScheme.outlineVariant,
-          width: 1,
-        ),
+        side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -49,14 +42,18 @@ class ProviderCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
+                backgroundColor: theme.colorScheme.primaryContainer,
                 child: ClipOval(
                   child: Image.network(
                     provider.imageUrl,
                     width: 54,
                     height: 54,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) =>
-                        const Icon(Icons.person, size: 28),
+                    errorBuilder: (_, _, _) => Icon(
+                      Icons.person_rounded,
+                      size: 28,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
                   ),
                 ),
               ),
@@ -84,6 +81,26 @@ class ProviderCard extends StatelessWidget {
                             color: theme.colorScheme.primary,
                           ),
                         ],
+                        if (provider.isFeatured) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.secondaryContainer,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              'Featured',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSecondaryContainer,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     Text(
@@ -93,17 +110,38 @@ class ProviderCard extends StatelessWidget {
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.star_rounded,
-                            size: 16,
-                            color: theme.colorScheme.tertiary),
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            provider.shortLocation,
+                            style: theme.textTheme.bodySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          size: 16,
+                          color: theme.colorScheme.tertiary,
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           provider.rating.toStringAsFixed(1),
-                          style: theme.textTheme.labelMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           ' (${provider.reviewCount})',
@@ -113,7 +151,7 @@ class ProviderCard extends StatelessWidget {
                         ),
                         const Spacer(),
                         Text(
-                          '\$${provider.hourlyRate.toStringAsFixed(0)}/hr',
+                          provider.formattedPrice,
                           style: theme.textTheme.labelLarge?.copyWith(
                             color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,

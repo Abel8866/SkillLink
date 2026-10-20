@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'screens/explore_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/my_bookings_screen.dart';
-import 'screens/premium_screen.dart';
+import 'screens/profile_screen.dart';
+import 'services/booking_service.dart';
+import 'theme/app_theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const SkillLinkApp());
 }
 
@@ -17,10 +20,7 @@ class SkillLinkApp extends StatelessWidget {
     return MaterialApp(
       title: 'SkillLink',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-        useMaterial3: true,
-      ),
+      theme: buildAppTheme(),
       home: const HomePage(),
     );
   }
@@ -38,36 +38,47 @@ class _HomePageState extends State<HomePage> {
     HomeScreen(),
     ExploreScreen(),
     MyBookingsScreen(),
-    PremiumScreen(),
+    ProfileScreen(),
   ];
 
   static const List<_Destination> _destinations = [
-    _Destination(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Home'),
     _Destination(
-        icon: Icons.explore_outlined, selectedIcon: Icons.explore, label: 'Explore'),
+      icon: Icons.home_outlined,
+      selectedIcon: Icons.home,
+      label: 'Home',
+    ),
     _Destination(
-        icon: Icons.event_note_outlined,
-        selectedIcon: Icons.event_note,
-        label: 'Bookings'),
+      icon: Icons.explore_outlined,
+      selectedIcon: Icons.explore,
+      label: 'Explore',
+    ),
     _Destination(
-        icon: Icons.workspace_premium_outlined,
-        selectedIcon: Icons.workspace_premium,
-        label: 'Premium'),
+      icon: Icons.event_note_outlined,
+      selectedIcon: Icons.event_note,
+      label: 'Bookings',
+    ),
+    _Destination(
+      icon: Icons.person_outline_rounded,
+      selectedIcon: Icons.person_rounded,
+      label: 'Profile',
+    ),
   ];
 
   int _currentIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    BookingService.instance.initialize();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) =>
-            setState(() => _currentIndex = index),
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
         destinations: _destinations
             .map(
               (destination) => NavigationDestination(
