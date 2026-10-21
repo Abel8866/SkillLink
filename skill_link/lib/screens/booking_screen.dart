@@ -4,6 +4,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../models/booking.dart';
 import '../models/service_provider.dart';
 import '../services/booking_service.dart';
 import '../theme/app_colors.dart';
@@ -74,9 +75,9 @@ class _BookingScreenState extends State<BookingScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppColors.primary,
-            ),
+            colorScheme: Theme.of(
+              context,
+            ).colorScheme.copyWith(primary: AppColors.primary),
           ),
           child: child!,
         );
@@ -109,39 +110,54 @@ class _BookingScreenState extends State<BookingScreen> {
 
     if (!mounted) return;
 
-    _bookingService.createBooking(
-      provider: widget.provider,
-      date: _selectedDate,
-      timeSlot: _selectedTime!,
-      durationHours: _durationHours,
-      customerName: _nameController.text.trim(),
-      customerPhone: _phoneController.text.trim(),
-      serviceLocation: _locationController.text.trim(),
-      notes: _detailsController.text.trim(),
-    );
+    Booking? booking;
+    try {
+      booking = await _bookingService.createBooking(
+        provider: widget.provider,
+        date: _selectedDate,
+        timeSlot: _selectedTime!,
+        durationHours: _durationHours,
+        customerName: _nameController.text.trim(),
+        customerPhone: _phoneController.text.trim(),
+        serviceLocation: _locationController.text.trim(),
+        notes: _detailsController.text.trim(),
+      );
+    } catch (error) {
+      debugPrint('Booking submission failed: $error');
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('We could not save your booking. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
 
-    final reference = _bookingService.generateReference();
-
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => BookingSuccessScreen(
-          bookingReference: reference,
-          provider: widget.provider,
-          serviceName: widget.provider.category,
-          preferredDate: _selectedDate,
-          preferredTime: _selectedTime!,
-          estimatedPrice: _totalCost,
-        ),
+        builder: (_) => BookingSuccessScreen(booking: booking!),
       ),
     );
   }
 
   String _formatSelectedDate() {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final weekdayIndex = _selectedDate.weekday - 1;
@@ -154,9 +170,7 @@ class _BookingScreenState extends State<BookingScreen> {
     final provider = widget.provider;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Request Booking'),
-      ),
+      appBar: AppBar(title: const Text('Request Booking')),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -168,9 +182,13 @@ class _BookingScreenState extends State<BookingScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.3,
+                  ),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -212,7 +230,10 @@ class _BookingScreenState extends State<BookingScreen> {
                     ),
                     if (provider.isFeatured)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.secondaryContainer,
                           borderRadius: BorderRadius.circular(999),
@@ -275,7 +296,9 @@ class _BookingScreenState extends State<BookingScreen> {
                   }
                   final phone = value.trim();
                   // Basic Ethiopian phone validation
-                  if (!RegExp(r'^(\+251|0)?9\d{8}$').hasMatch(phone.replaceAll(' ', ''))) {
+                  if (!RegExp(
+                    r'^(\+251|0)?9\d{8}$',
+                  ).hasMatch(phone.replaceAll(' ', ''))) {
                     return 'Enter a valid Ethiopian phone number (e.g., +251 9XX XXX XXX)';
                   }
                   return null;
@@ -341,7 +364,9 @@ class _BookingScreenState extends State<BookingScreen> {
                         label: Text(slot),
                         visualDensity: VisualDensity.compact,
                         onSelected: (_) => setState(() => _selectedTime = slot),
-                        selectedColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                        selectedColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.15,
+                        ),
                         checkmarkColor: theme.colorScheme.primary,
                       ),
                     )
@@ -381,7 +406,9 @@ class _BookingScreenState extends State<BookingScreen> {
                   const SizedBox(width: 12),
                   Text(
                     '$_durationHours hour${_durationHours > 1 ? 's' : ''}',
-                    style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   IconButton(
@@ -430,7 +457,8 @@ class _BookingScreenState extends State<BookingScreen> {
                 maxLines: 3,
                 decoration: InputDecoration(
                   labelText: 'Additional Details (Optional)',
-                  hintText: 'Describe the task, specific requirements, access instructions...',
+                  hintText:
+                      'Describe the task, specific requirements, access instructions...',
                   prefixIcon: const Padding(
                     padding: EdgeInsets.only(bottom: 40),
                     child: Icon(Icons.notes_outlined),
@@ -445,7 +473,9 @@ class _BookingScreenState extends State<BookingScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: theme.colorScheme.outlineVariant),
                 ),
@@ -502,13 +532,18 @@ class _BookingScreenState extends State<BookingScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Icon(Icons.send_rounded),
                   label: Text(
                     _isSubmitting ? 'Submitting...' : 'Submit Booking Request',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   onPressed: _isSubmitting ? null : _submitBooking,
                 ),

@@ -49,7 +49,7 @@ class BookingService extends ChangeNotifier {
   }
 
   /// Create a new booking request
-  void createBooking({
+  Future<Booking> createBooking({
     required ServiceProvider provider,
     required DateTime date,
     required String timeSlot,
@@ -58,10 +58,10 @@ class BookingService extends ChangeNotifier {
     required String customerPhone,
     required String serviceLocation,
     String notes = '',
-  }) {
+  }) async {
     final booking = Booking(
-      id: 'b$_nextId',
-      reference: generateReference(),
+      id: _nextId,
+      reference: _nextReference,
       providerId: provider.id,
       providerName: provider.name,
       providerProfession: provider.profession,
@@ -77,25 +77,26 @@ class BookingService extends ChangeNotifier {
       status: BookingStatus.pending,
       createdAt: DateTime.now(),
     );
-    _storage.createBooking(booking);
+    await _storage.createBooking(booking);
 
     // Save user info for future bookings
-    _storage.saveUserInfo(name: customerName, phone: customerPhone);
+    await _storage.saveUserInfo(name: customerName, phone: customerPhone);
+    return booking;
   }
 
   /// Cancel a booking
-  void cancelBooking(String id) {
-    _storage.cancelBooking(id);
+  Future<void> cancelBooking(String id) {
+    return _storage.cancelBooking(id);
   }
 
   /// Mark booking as completed
-  void markCompleted(String id) {
-    _storage.completeBooking(id);
+  Future<void> markCompleted(String id) {
+    return _storage.completeBooking(id);
   }
 
   /// Update booking status
-  void updateBookingStatus(String id, BookingStatus status) {
-    _storage.updateBookingStatus(id, status);
+  Future<void> updateBookingStatus(String id, BookingStatus status) {
+    return _storage.updateBookingStatus(id, status);
   }
 
   /// Generate a human-readable booking reference
@@ -104,7 +105,17 @@ class BookingService extends ChangeNotifier {
     return 'SL${rand.nextInt(90000) + 10000}';
   }
 
-  int get _nextId => _storage.bookings.length + 1;
+  String get _nextId => 'b${DateTime.now().microsecondsSinceEpoch}';
+
+  String get _nextReference {
+    String reference;
+    do {
+      reference = generateReference();
+    } while (_storage.bookings.any(
+      (booking) => booking.reference == reference,
+    ));
+    return reference;
+  }
 
   /// Get user's saved name
   String get savedUserName => _storage.userName;

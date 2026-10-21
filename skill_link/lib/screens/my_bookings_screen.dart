@@ -7,12 +7,10 @@ import 'package:flutter/material.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
 import '../theme/app_colors.dart';
+import 'explore_screen.dart';
 
 class MyBookingsScreen extends StatefulWidget {
-  const MyBookingsScreen({
-    super.key,
-    this.initialTab = 0,
-  });
+  const MyBookingsScreen({super.key, this.initialTab = 0});
 
   final int initialTab;
 
@@ -87,8 +85,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
           indicatorColor: theme.colorScheme.primary,
           labelColor: theme.colorScheme.primary,
           unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-          labelStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-          unselectedLabelStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+          labelStyle: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
           tabs: _filters.map((f) => Tab(text: f.label)).toList(),
         ),
       ),
@@ -122,7 +124,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -159,9 +163,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   onPressed: () {
-                    // Navigate to Explore tab (index 1)
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                    // The main app will handle tab switching
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ExploreScreen(),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -201,16 +207,31 @@ class _BookingTile extends StatelessWidget {
             child: const Text('Keep Booking'),
           ),
           FilledButton(
-            onPressed: () {
-              _service.cancelBooking(booking.id);
-              Navigator.of(dialogContext).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Booking cancelled.'),
-                  backgroundColor: AppColors.error,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+            onPressed: () async {
+              try {
+                await _service.cancelBooking(booking.id);
+                if (!context.mounted) return;
+                Navigator.of(dialogContext).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Booking cancelled.'),
+                    backgroundColor: AppColors.error,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (error) {
+                debugPrint('Booking cancellation failed: $error');
+                if (!context.mounted) return;
+                Navigator.of(dialogContext).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'We could not update this booking. Please try again.',
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Cancel Booking'),
@@ -261,8 +282,11 @@ class _BookingTile extends StatelessWidget {
                         width: 52,
                         height: 52,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) =>
-                            Icon(Icons.person_rounded, size: 26, color: theme.colorScheme.onSurfaceVariant),
+                        errorBuilder: (_, _, _) => Icon(
+                          Icons.person_rounded,
+                          size: 26,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ),
@@ -288,11 +312,16 @@ class _BookingTile extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
                       statusLabel,
@@ -309,7 +338,11 @@ class _BookingTile extends StatelessWidget {
               // Reference and service
               Row(
                 children: [
-                  Icon(Icons.confirmation_number_rounded, size: 15, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.confirmation_number_rounded,
+                    size: 15,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     booking.reference,
@@ -319,7 +352,11 @@ class _BookingTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Icon(Icons.work_outline_rounded, size: 15, color: theme.colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.work_outline_rounded,
+                    size: 15,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -337,19 +374,21 @@ class _BookingTile extends StatelessWidget {
               // Date, time, price
               Row(
                 children: [
-                  Icon(Icons.calendar_today_rounded, size: 15, color: theme.colorScheme.primary),
-                  const SizedBox(width: 6),
-                  Text(
-                    booking.formattedDate,
-                    style: theme.textTheme.bodySmall,
+                  Icon(
+                    Icons.calendar_today_rounded,
+                    size: 15,
+                    color: theme.colorScheme.primary,
                   ),
+                  const SizedBox(width: 6),
+                  Text(booking.formattedDate, style: theme.textTheme.bodySmall),
                   const SizedBox(width: 16),
-                  Icon(Icons.schedule_rounded, size: 15, color: theme.colorScheme.primary),
-                  const SizedBox(width: 6),
-                  Text(
-                    booking.formattedTime,
-                    style: theme.textTheme.bodySmall,
+                  Icon(
+                    Icons.schedule_rounded,
+                    size: 15,
+                    color: theme.colorScheme.primary,
                   ),
+                  const SizedBox(width: 6),
+                  Text(booking.formattedTime, style: theme.textTheme.bodySmall),
                   const Spacer(),
                   Text(
                     booking.formattedPrice,
@@ -387,7 +426,9 @@ class _BookingTile extends StatelessWidget {
                         side: BorderSide(
                           color: theme.colorScheme.error.withValues(alpha: 0.5),
                         ),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -481,11 +522,16 @@ class _BookingDetailSheet extends StatelessWidget {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: statusColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                              border: Border.all(
+                                color: statusColor.withValues(alpha: 0.3),
+                              ),
                             ),
                             child: Text(
                               booking.getStatusDetailLabel(),
@@ -606,7 +652,9 @@ class _BookingDetailSheet extends StatelessWidget {
                               foregroundColor: theme.colorScheme.error,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               side: BorderSide(
-                                color: theme.colorScheme.error.withValues(alpha: 0.5),
+                                color: theme.colorScheme.error.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                             onPressed: () {
@@ -694,10 +742,7 @@ class _DetailItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                value,
-                style: valueStyle ?? theme.textTheme.bodyMedium,
-              ),
+              Text(value, style: valueStyle ?? theme.textTheme.bodyMedium),
             ],
           ),
         ),

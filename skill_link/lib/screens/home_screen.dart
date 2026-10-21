@@ -84,7 +84,14 @@ class _HomeScreenState extends State<HomeScreen> {
               color: theme.colorScheme.onSurface,
             ),
             tooltip: 'Notifications',
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('You have no new notifications.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
           ),
           const SizedBox(width: 4),
         ],

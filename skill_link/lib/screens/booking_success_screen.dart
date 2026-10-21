@@ -4,32 +4,29 @@ library;
 
 import 'package:flutter/material.dart';
 
-import '../models/service_provider.dart';
+import '../models/booking.dart';
 import '../theme/app_colors.dart';
 import 'my_bookings_screen.dart';
 
 class BookingSuccessScreen extends StatelessWidget {
-  const BookingSuccessScreen({
-    super.key,
-    required this.bookingReference,
-    required this.provider,
-    required this.serviceName,
-    required this.preferredDate,
-    required this.preferredTime,
-    required this.estimatedPrice,
-  });
+  const BookingSuccessScreen({super.key, required this.booking});
 
-  final String bookingReference;
-  final ServiceProvider provider;
-  final String serviceName;
-  final DateTime preferredDate;
-  final String preferredTime;
-  final double estimatedPrice;
+  final Booking booking;
 
   String _formatDate(DateTime date) {
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -115,13 +112,18 @@ class BookingSuccessScreen extends StatelessWidget {
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            bookingReference,
+                            booking.reference,
                             style: theme.textTheme.labelLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.primary,
@@ -142,7 +144,7 @@ class BookingSuccessScreen extends StatelessWidget {
                           radius: 24,
                           child: ClipOval(
                             child: Image.network(
-                              provider.imageUrl,
+                              booking.providerImageUrl,
                               width: 48,
                               height: 48,
                               fit: BoxFit.cover,
@@ -160,13 +162,13 @@ class BookingSuccessScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                provider.name,
+                                booking.providerName,
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                provider.profession,
+                                booking.providerProfession,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -182,25 +184,25 @@ class BookingSuccessScreen extends StatelessWidget {
                     _DetailRow(
                       icon: Icons.work_outline_rounded,
                       label: 'Service',
-                      value: serviceName,
+                      value: booking.serviceName,
                     ),
                     const SizedBox(height: 12),
                     _DetailRow(
                       icon: Icons.event_outlined,
                       label: 'Date',
-                      value: _formatDate(preferredDate),
+                      value: _formatDate(booking.preferredDate),
                     ),
                     const SizedBox(height: 12),
                     _DetailRow(
                       icon: Icons.access_time_rounded,
                       label: 'Time',
-                      value: preferredTime,
+                      value: booking.preferredTime,
                     ),
                     const SizedBox(height: 12),
                     _DetailRow(
                       icon: Icons.attach_money_rounded,
                       label: 'Estimated Price',
-                      value: 'ETB ${estimatedPrice.toStringAsFixed(0)}',
+                      value: booking.formattedPrice,
                       valueStyle: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.primary,
@@ -226,9 +228,14 @@ class BookingSuccessScreen extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.tertiary.withValues(alpha: 0.15),
+                            color: theme.colorScheme.tertiary.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
@@ -337,10 +344,7 @@ class _DetailRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                value,
-                style: valueStyle ?? theme.textTheme.bodyMedium,
-              ),
+              Text(value, style: valueStyle ?? theme.textTheme.bodyMedium),
             ],
           ),
         ),

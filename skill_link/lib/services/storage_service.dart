@@ -41,7 +41,18 @@ class StorageService extends ChangeNotifier {
     if (bookingsJson != null) {
       try {
         final List<dynamic> decoded = json.decode(bookingsJson);
-        _bookings = decoded.map((json) => _bookingFromJson(json)).toList();
+        _bookings = decoded
+            .whereType<Map<String, dynamic>>()
+            .map((item) {
+              try {
+                return _bookingFromJson(item);
+              } catch (error) {
+                debugPrint('Skipping invalid saved booking: $error');
+                return null;
+              }
+            })
+            .whereType<Booking>()
+            .toList();
         // Sort by creation date, newest first
         _bookings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       } catch (e) {
@@ -80,30 +91,43 @@ class StorageService extends ChangeNotifier {
   }
 
   /// Create a new booking
-  void createBooking(Booking booking) {
+  Future<void> createBooking(Booking booking) async {
     _bookings.insert(0, booking);
-    _saveBookings();
+    try {
+      await _saveBookings();
+    } catch (error) {
+      _bookings.remove(booking);
+      debugPrint('Error saving booking: $error');
+      rethrow;
+    }
     notifyListeners();
   }
 
   /// Update booking status
-  void updateBookingStatus(String id, BookingStatus status) {
+  Future<void> updateBookingStatus(String id, BookingStatus status) async {
     final index = _bookings.indexWhere((b) => b.id == id);
     if (index != -1) {
+      final previous = _bookings[index];
       _bookings[index] = _bookings[index].copyWith(status: status);
-      _saveBookings();
+      try {
+        await _saveBookings();
+      } catch (error) {
+        _bookings[index] = previous;
+        debugPrint('Error saving booking status: $error');
+        rethrow;
+      }
       notifyListeners();
     }
   }
 
   /// Cancel a booking (sets status to cancelled)
-  void cancelBooking(String id) {
-    updateBookingStatus(id, BookingStatus.cancelled);
+  Future<void> cancelBooking(String id) {
+    return updateBookingStatus(id, BookingStatus.cancelled);
   }
 
   /// Mark booking as completed
-  void completeBooking(String id) {
-    updateBookingStatus(id, BookingStatus.completed);
+  Future<void> completeBooking(String id) {
+    return updateBookingStatus(id, BookingStatus.completed);
   }
 
   /// Get bookings by status
