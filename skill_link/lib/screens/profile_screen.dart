@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../services/auth_service.dart';
 import '../services/booking_service.dart';
+import 'auth_screen.dart';
 import 'my_bookings_screen.dart';
 import 'premium_screen.dart';
 import 'provider_registration_screen.dart';
@@ -11,9 +13,17 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: AuthService.instance,
+      builder: (context, _) => _buildProfile(context),
+    );
+  }
+
+  Widget _buildProfile(BuildContext context) {
     final theme = Theme.of(context);
+    final user = AuthService.instance.currentUser;
     final bookingService = BookingService.instance;
-    final name = bookingService.savedUserName;
+    final name = user?.displayName ?? bookingService.savedUserName;
     final initials = name.isEmpty
         ? 'SL'
         : name
@@ -59,7 +69,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Local demo profile',
+                          user?.email ?? 'Browse publicly without signing in',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -72,6 +82,34 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          if (user == null)
+            _ProfileAction(
+              icon: Icons.login_rounded,
+              title: 'Sign In',
+              subtitle: 'Access your account and saved profile',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const AuthScreen()),
+              ),
+            )
+          else
+            _ProfileAction(
+              icon: Icons.logout_rounded,
+              title: 'Sign Out',
+              subtitle: 'Sign out of ${user.email ?? 'your account'}',
+              onTap: () async {
+                try {
+                  await AuthService.instance.signOut();
+                } catch (error) {
+                  debugPrint('Sign out failed: $error');
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Could not sign out. Please try again.'),
+                    ),
+                  );
+                }
+              },
+            ),
           _ProfileAction(
             icon: Icons.event_note_outlined,
             title: 'My Bookings',
@@ -135,7 +173,7 @@ class ProfileScreen extends StatelessWidget {
             onTap: () => _showInfo(
               context,
               'Privacy Information',
-              'This MVP does not use authentication. Booking information is stored locally on the device.',
+              'Your account profile is stored securely in Firebase. Bookings and provider registrations remain stored locally on this device.',
             ),
           ),
         ],
