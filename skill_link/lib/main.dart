@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'services/booking_service.dart';
+import 'services/provider_registration_service.dart';
 import 'screens/explore_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/my_bookings_screen.dart';
@@ -10,6 +11,7 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BookingService.instance.initialize();
+  await ProviderRegistrationService.instance.initialize();
   runApp(const SkillLinkApp());
 }
 

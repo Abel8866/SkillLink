@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../data/sample_providers.dart';
 import '../models/service_provider.dart';
+import '../screens/provider_registration_screen.dart';
 import '../theme/app_colors.dart';
 import '../widgets/category_card.dart';
 import '../widgets/provider_card.dart';
@@ -240,6 +241,55 @@ class _HomeScreenState extends State<HomeScreen> {
                         size: 36,
                         color: theme.colorScheme.onPrimary,
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Provider registration promotion
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: theme.colorScheme.secondary.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.handshake_outlined,
+                      color: theme.colorScheme.onSecondaryContainer,
+                      size: 28,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Are You a Skilled Professional?',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: theme.colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Join SkillLink and connect with customers looking for your services.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    FilledButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ProviderRegistrationScreen(),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add_business_outlined),
+                      label: const Text('Become a Provider'),
                     ),
                   ],
                 ),

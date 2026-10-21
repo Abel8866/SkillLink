@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../data/sample_providers.dart';
-import '../models/provider_registration.dart';
 import '../services/provider_registration_service.dart';
 import '../theme/app_colors.dart';
 import 'provider_registration_success_screen.dart';
@@ -38,11 +37,7 @@ class _ProviderRegistrationScreenState
     'Per project',
     'Negotiable',
   ];
-  static const _availabilityOptions = [
-    'Available',
-    'Busy',
-    'Weekends only',
-  ];
+  static const _availabilityOptions = ['Available', 'Busy', 'Weekends only'];
 
   final _registrationService = ProviderRegistrationService.instance;
 
@@ -221,16 +216,18 @@ class _ProviderRegistrationScreenState
             const SizedBox(height: 12),
             _sectionTitle('Professional information'),
             DropdownButtonFormField<String>(
-              value: _category,
+              initialValue: _category,
               decoration: const InputDecoration(
                 labelText: 'Service category',
                 prefixIcon: Icon(Icons.category_outlined),
               ),
               items: serviceCategoryNames
-                  .map((category) => DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      ))
+                  .map(
+                    (category) => DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    ),
+                  )
                   .toList(),
               validator: (value) => value == null ? 'Select a category' : null,
               onChanged: _isSubmitting
@@ -262,40 +259,41 @@ class _ProviderRegistrationScreenState
               label: 'Price',
               hint: 'Example: 500',
               icon: Icons.payments_outlined,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: _validatePrice,
             ),
             DropdownButtonFormField<String>(
-              value: _pricingUnit,
+              initialValue: _pricingUnit,
               decoration: const InputDecoration(
                 labelText: 'Pricing unit',
                 prefixIcon: Icon(Icons.sell_outlined),
               ),
               items: _pricingUnits
-                  .map((unit) => DropdownMenuItem(
-                        value: unit,
-                        child: Text(unit),
-                      ))
+                  .map(
+                    (unit) => DropdownMenuItem(value: unit, child: Text(unit)),
+                  )
                   .toList(),
-              validator: (value) => value == null ? 'Select a pricing unit' : null,
+              validator: (value) =>
+                  value == null ? 'Select a pricing unit' : null,
               onChanged: _isSubmitting
                   ? null
                   : (value) => setState(() {
-                        _pricingUnit = value;
-                        _formKey.currentState?.validate();
-                      }),
+                      _pricingUnit = value;
+                      _formKey.currentState?.validate();
+                    }),
             ),
             DropdownButtonFormField<String>(
-              value: _availability,
+              initialValue: _availability,
               decoration: const InputDecoration(
                 labelText: 'Availability',
                 prefixIcon: Icon(Icons.schedule_outlined),
               ),
               items: _availabilityOptions
-                  .map((item) => DropdownMenuItem(
-                        value: item,
-                        child: Text(item),
-                      ))
+                  .map(
+                    (item) => DropdownMenuItem(value: item, child: Text(item)),
+                  )
                   .toList(),
               validator: (value) =>
                   value == null ? 'Select your availability' : null,
@@ -337,14 +335,14 @@ class _ProviderRegistrationScreenState
   }
 
   Widget _sectionTitle(String title) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      title,
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+    ),
+  );
 
   Widget _field({
     required TextEditingController controller,
@@ -368,8 +366,9 @@ class _ProviderRegistrationScreenState
         keyboardType: keyboardType,
         maxLines: maxLines,
         validator: validator,
-        textInputAction:
-            maxLines > 1 ? TextInputAction.newline : TextInputAction.next,
+        textInputAction: maxLines > 1
+            ? TextInputAction.newline
+            : TextInputAction.next,
       ),
     );
   }

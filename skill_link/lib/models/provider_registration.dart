@@ -69,22 +69,22 @@ class ProviderRegistration {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'reference': reference,
-        'fullName': fullName,
-        'phone': phone,
-        'email': email,
-        'location': location,
-        'category': category,
-        'professionalTitle': professionalTitle,
-        'experienceYears': experienceYears,
-        'description': description,
-        'price': price,
-        'pricingUnit': pricingUnit,
-        'availability': availability,
-        'submittedAt': submittedAt.toIso8601String(),
-        'status': status.name,
-      };
+    'id': id,
+    'reference': reference,
+    'fullName': fullName,
+    'phone': phone,
+    'email': email,
+    'location': location,
+    'category': category,
+    'professionalTitle': professionalTitle,
+    'experienceYears': experienceYears,
+    'description': description,
+    'price': price,
+    'pricingUnit': pricingUnit,
+    'availability': availability,
+    'submittedAt': submittedAt.toIso8601String(),
+    'status': status.name,
+  };
 
   factory ProviderRegistration.fromJson(Map<String, dynamic> json) {
     return ProviderRegistration(

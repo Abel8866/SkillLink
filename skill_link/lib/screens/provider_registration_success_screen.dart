@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../models/provider_registration.dart';
-import 'home_screen.dart';
 import 'provider_registrations_screen.dart';
 
 class ProviderRegistrationSuccessScreen extends StatelessWidget {
@@ -62,7 +61,10 @@ class ProviderRegistrationSuccessScreen extends StatelessWidget {
                       value: registration.professionalTitle,
                     ),
                     _DetailRow(label: 'Category', value: registration.category),
-                    _DetailRow(label: 'Status', value: registration.status.label),
+                    _DetailRow(
+                      label: 'Status',
+                      value: registration.status.label,
+                    ),
                   ],
                 ),
               ),
@@ -84,10 +86,8 @@ class ProviderRegistrationSuccessScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: () => Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
-                  (route) => route.isFirst,
-                ),
+                onPressed: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
                 child: const Text('Return to Home'),
               ),
             ),
@@ -112,19 +112,16 @@ class _DetailRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ),
           const SizedBox(width: 16),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
         ],

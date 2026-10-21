@@ -32,17 +32,13 @@ class ProviderRegistrationService extends ChangeNotifier {
             if (item is! Map) continue;
             try {
               _registrations.add(
-                ProviderRegistration.fromJson(
-                  Map<String, dynamic>.from(item),
-                ),
+                ProviderRegistration.fromJson(Map<String, dynamic>.from(item)),
               );
             } catch (error) {
               debugPrint('Skipping invalid provider registration: $error');
             }
           }
-          _registrations.sort(
-            (a, b) => b.submittedAt.compareTo(a.submittedAt),
-          );
+          _registrations.sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
         }
       }
     } catch (error) {

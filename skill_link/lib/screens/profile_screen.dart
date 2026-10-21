@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../services/booking_service.dart';
 import 'my_bookings_screen.dart';
 import 'premium_screen.dart';
+import 'provider_registration_screen.dart';
+import 'provider_registrations_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -84,6 +86,26 @@ class ProfileScreen extends StatelessWidget {
             subtitle: 'Get discovered by more local customers',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const PremiumScreen()),
+            ),
+          ),
+          _ProfileAction(
+            icon: Icons.person_add_alt_1_outlined,
+            title: 'Register as a Service Provider',
+            subtitle: 'Showcase your skills and reach more customers.',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ProviderRegistrationScreen(),
+              ),
+            ),
+          ),
+          _ProfileAction(
+            icon: Icons.assignment_outlined,
+            title: 'My Provider Registration',
+            subtitle: 'View registrations saved on this device',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ProviderRegistrationsScreen(),
+              ),
             ),
           ),
           _ProfileAction(
