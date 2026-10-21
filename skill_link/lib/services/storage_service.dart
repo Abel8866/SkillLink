@@ -30,11 +30,17 @@ class StorageService extends ChangeNotifier {
   String get userPhone => _userPhone;
   bool get isInitialized => _initialized;
 
-  /// Initialize the storage service and load saved data
+  /// Initialize the storage service and load saved data.
+  ///
+  /// Re-running this method reloads the latest SharedPreferences values so the
+  /// singleton stays in sync across repeated app/test startups without stale
+  /// cached state.
   Future<void> initialize() async {
-    if (_initialized) return;
-
     final prefs = await SharedPreferences.getInstance();
+
+    _bookings = [];
+    _userName = '';
+    _userPhone = '';
 
     // Load bookings
     final bookingsJson = prefs.getString(_bookingsKey);

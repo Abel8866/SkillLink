@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skill_link/models/provider_registration.dart';
@@ -46,6 +48,56 @@ void main() {
       expect(service.registrations, contains(second));
     },
   );
+
+  test('provider registration reloads from saved state on re-initialize', () async {
+    SharedPreferences.setMockInitialValues({});
+    final service = ProviderRegistrationService.instance;
+    await service.initialize();
+
+    await service.submit(
+      fullName: 'Old Provider',
+      phone: '0910000000',
+      email: 'old@example.com',
+      location: 'Old Town',
+      category: 'Cleaning',
+      professionalTitle: 'Cleaner',
+      experienceYears: 2,
+      description: 'Old listing',
+      price: 300,
+      pricingUnit: 'Per hour',
+      availability: 'Weekdays',
+    );
+
+    final stored = jsonEncode([
+      ProviderRegistration(
+        id: 'pr-reloaded',
+        reference: 'PR99999',
+        fullName: 'New Provider',
+        phone: '0911111111',
+        email: 'new@example.com',
+        location: 'New Town',
+        category: 'Tutoring',
+        professionalTitle: 'Tutor',
+        experienceYears: 4,
+        description: 'Fresh listing',
+        price: 400,
+        pricingUnit: 'Per session',
+        availability: 'Weekends',
+        submittedAt: DateTime(2026, 3, 10),
+        status: ProviderRegistrationStatus.pending,
+      ).toJson(),
+    ]);
+
+    SharedPreferences.setMockInitialValues({
+      'skilllink_provider_registrations': stored,
+    });
+
+    await service.initialize();
+
+    expect(service.registrations, hasLength(1));
+    expect(service.registrations.single.fullName, 'New Provider');
+    expect(service.registrations.single.reference, 'PR99999');
+  });
 
   test('provider registration survives JSON serialization', () {
     final registration = ProviderRegistration(

@@ -20,6 +20,7 @@ class BookingService extends ChangeNotifier {
   factory BookingService() => instance;
 
   final StorageService _storage = StorageService.instance;
+  bool _storageListenerAttached = false;
 
   List<Booking> get bookings => _storage.bookings;
 
@@ -34,8 +35,10 @@ class BookingService extends ChangeNotifier {
   /// Initialize the service (loads from storage)
   Future<void> initialize() async {
     await _storage.initialize();
-    // Listen to storage changes and notify
-    _storage.addListener(_onStorageChanged);
+    if (!_storageListenerAttached) {
+      _storage.addListener(_onStorageChanged);
+      _storageListenerAttached = true;
+    }
   }
 
   void _onStorageChanged() {

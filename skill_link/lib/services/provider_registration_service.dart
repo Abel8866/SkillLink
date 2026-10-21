@@ -15,13 +15,12 @@ class ProviderRegistrationService extends ChangeNotifier {
   static const _registrationsKey = 'skilllink_provider_registrations';
 
   final List<ProviderRegistration> _registrations = [];
-  bool _initialized = false;
 
   List<ProviderRegistration> get registrations =>
       List.unmodifiable(_registrations);
 
   Future<void> initialize() async {
-    if (_initialized) return;
+    _registrations.clear();
     try {
       final prefs = await SharedPreferences.getInstance();
       final encoded = prefs.getString(_registrationsKey);
@@ -44,7 +43,6 @@ class ProviderRegistrationService extends ChangeNotifier {
     } catch (error) {
       debugPrint('Error loading provider registrations: $error');
     }
-    _initialized = true;
     notifyListeners();
   }
 
