@@ -49,7 +49,7 @@ class BookingService extends ChangeNotifier {
   }
 
   /// Create a new booking request
-  Booking createBooking({
+  void createBooking({
     required ServiceProvider provider,
     required DateTime date,
     required String timeSlot,
@@ -81,7 +81,6 @@ class BookingService extends ChangeNotifier {
 
     // Save user info for future bookings
     _storage.saveUserInfo(name: customerName, phone: customerPhone);
-    return booking;
   }
 
   /// Cancel a booking

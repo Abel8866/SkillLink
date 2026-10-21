@@ -3,6 +3,7 @@
 library;
 
 import 'package:flutter/material.dart';
+
 import '../models/service_provider.dart';
 import '../theme/app_colors.dart';
 import 'booking_screen.dart';
@@ -15,6 +16,7 @@ class ProviderDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(provider.name),
@@ -100,10 +102,7 @@ class ProviderDetailsScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primary,
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: theme.colorScheme.surface,
-                                width: 3,
-                              ),
+                              border: Border.all(color: theme.colorScheme.surface, width: 3),
                             ),
                             child: Icon(
                               Icons.verified_rounded,
@@ -174,16 +173,11 @@ class ProviderDetailsScreen extends StatelessWidget {
                   if (provider.availability != null) ...[
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: AppColors.successLight,
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: AppColors.success.withValues(alpha: 0.3),
-                        ),
+                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -233,7 +227,7 @@ class ProviderDetailsScreen extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _StatCard(
-                    icon: Icons.payments_outlined,
+                    icon: Icons.attach_money_rounded,
                     value: provider.formattedPrice,
                     label: 'Starting from',
                     iconColor: theme.colorScheme.primary,
@@ -249,22 +243,14 @@ class ProviderDetailsScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.secondaryContainer.withValues(
-                    alpha: 0.3,
-                  ),
+                  color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: theme.colorScheme.secondary.withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: theme.colorScheme.secondary.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.star_rounded,
-                      size: 18,
-                      color: theme.colorScheme.secondary,
-                    ),
+                    Icon(Icons.star_rounded, size: 18, color: theme.colorScheme.secondary),
                     const SizedBox(width: 8),
                     Text(
                       'Featured Professional',
@@ -336,13 +322,8 @@ class ProviderDetailsScreen extends StatelessWidget {
                       (skill) => Chip(
                         label: Text(skill.trim()),
                         visualDensity: VisualDensity.compact,
-                        backgroundColor: theme.colorScheme.secondaryContainer
-                            .withValues(alpha: 0.3),
-                        side: BorderSide(
-                          color: theme.colorScheme.secondary.withValues(
-                            alpha: 0.3,
-                          ),
-                        ),
+                        backgroundColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
+                        side: BorderSide(color: theme.colorScheme.secondary.withValues(alpha: 0.3)),
                       ),
                     ),
               ],
@@ -364,6 +345,7 @@ class ProviderDetailsScreen extends StatelessWidget {
                     icon: const Icon(Icons.phone_rounded),
                     label: const Text('Call'),
                     onPressed: () {
+                      // In a real app, this would launch the phone dialer
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Call ${provider.name} — demo only'),
@@ -424,9 +406,7 @@ class ProviderDetailsScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
-                ),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
@@ -519,24 +499,16 @@ class ProviderDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     review['name'] as String,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const Spacer(),
                   Row(
                     children: [
-                      Icon(
-                        Icons.star_rounded,
-                        size: 14,
-                        color: theme.colorScheme.tertiary,
-                      ),
+                      Icon(Icons.star_rounded, size: 14, color: theme.colorScheme.tertiary),
                       const SizedBox(width: 2),
                       Text(
                         (review['rating'] as double).toStringAsFixed(1),
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -550,9 +522,7 @@ class ProviderDetailsScreen extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 review['date'] as String,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),

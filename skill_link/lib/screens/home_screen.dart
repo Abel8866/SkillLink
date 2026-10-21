@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: Row(
           children: [
@@ -84,13 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: theme.colorScheme.onSurface,
             ),
             tooltip: 'Notifications',
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Notifications will be available in a future release.',
-                ),
-              ),
-            ),
+            onPressed: () {},
           ),
           const SizedBox(width: 4),
         ],
@@ -128,8 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
               // Welcome section
               Text(
                 'Find the right professional',
-                style: theme.textTheme.displaySmall?.copyWith(
-                  fontSize: 30,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
                 ),
               ),
@@ -140,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Search field
               Material(
@@ -188,11 +182,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 24),
 
-              const SizedBox(height: 4),
               // Promotional banner
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [theme.colorScheme.primary, AppColors.primaryLight],
@@ -208,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Trusted help, close to home',
+                            'First Booking?',
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.onPrimary,
@@ -216,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Compare local professionals, prices, and availability in one place.',
+                            'Get 20% off your first service\nwith any verified provider.',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onPrimary.withValues(
                                 alpha: 0.9,
@@ -244,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 28),
 
               // Categories section
               Row(
@@ -270,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: 112,
+                height: 100,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _displayedCategories.length,

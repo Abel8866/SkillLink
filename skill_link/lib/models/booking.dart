@@ -98,7 +98,7 @@ class Booking {
 
   Color getStatusColor(ThemeData theme) {
     return switch (status) {
-      BookingStatus.pending => AppColors.warning,
+      BookingStatus.pending => theme.colorScheme.tertiary,
       BookingStatus.confirmed => theme.colorScheme.primary,
       BookingStatus.completed => AppColors.success,
       BookingStatus.cancelled => theme.colorScheme.error,

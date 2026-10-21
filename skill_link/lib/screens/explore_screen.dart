@@ -136,7 +136,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
           // Category filters
           SizedBox(
-            height: 56,
+            height: 48,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               scrollDirection: Axis.horizontal,
@@ -192,15 +192,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
           // Sort control
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
               children: [
-                Icon(
-                  Icons.tune_rounded,
-                  size: 18,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 6),
                 Text(
                   'Sort by:',
                   style: theme.textTheme.labelMedium?.copyWith(
@@ -208,7 +202,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const SizedBox(width: 4),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     initialValue: _sortBy,
@@ -262,7 +255,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
           // Results count
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 Text(
