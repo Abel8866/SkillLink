@@ -379,8 +379,9 @@ ThemeData buildAppTheme() {
         return AppColors.surface;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected))
+        if (states.contains(WidgetState.selected)) {
           return AppColors.primary.withValues(alpha: 0.5);
+        }
         return AppColors.border;
       }),
     ),
@@ -400,14 +401,16 @@ ThemeData buildAppTheme() {
       headerBackgroundColor: AppColors.primary,
       headerForegroundColor: AppColors.textOnPrimary,
       dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected))
+        if (states.contains(WidgetState.selected)) {
           return AppColors.textOnPrimary;
+        }
         return AppColors.textPrimary;
       }),
       dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) return AppColors.primary;
-        if (states.contains(WidgetState.hovered))
+        if (states.contains(WidgetState.hovered)) {
           return AppColors.primary.withValues(alpha: 0.12);
+        }
         return Colors.transparent;
       }),
       weekdayStyle: textTheme.labelSmall?.copyWith(
@@ -427,8 +430,9 @@ ThemeData buildAppTheme() {
         return AppColors.surfaceContainerHighest;
       }),
       hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
-        if (states.contains(WidgetState.selected))
+        if (states.contains(WidgetState.selected)) {
           return AppColors.textOnPrimary;
+        }
         return AppColors.textPrimary;
       }),
       dayPeriodColor: WidgetStateColor.resolveWith((states) {
@@ -436,8 +440,9 @@ ThemeData buildAppTheme() {
         return AppColors.surfaceContainerHighest;
       }),
       dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
-        if (states.contains(WidgetState.selected))
+        if (states.contains(WidgetState.selected)) {
           return AppColors.textOnPrimary;
+        }
         return AppColors.textPrimary;
       }),
       dialHandColor: AppColors.primary,
