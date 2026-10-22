@@ -93,27 +93,7 @@ class _ProfileContent extends StatelessWidget {
                 onSignOut: () => _confirmSignOut(context),
               ),
             const SizedBox(height: 28),
-            if (isSignedIn)
-              FutureBuilder<bool>(
-                future: AdminService.instance.isAdmin(),
-                builder: (context, snapshot) {
-                  if (snapshot.data != true) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 28),
-                    child: _GroupedSurface(
-                      children: [
-                        _MenuRow(
-                          icon: Icons.admin_panel_settings_outlined,
-                          title: 'Admin Dashboard',
-                          subtitle: 'Review provider applications',
-                          onTap: () =>
-                              _push(context, const AdminDashboardScreen()),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+            if (isSignedIn) _AdminEntry(user: user!),
             const _SectionHeader(title: 'Your Activity'),
             const SizedBox(height: 12),
             Row(
@@ -330,6 +310,59 @@ class _ProfileContent extends StatelessWidget {
 
   static void _push(BuildContext context, Widget screen) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
+  }
+}
+
+class _AdminEntry extends StatefulWidget {
+  const _AdminEntry({required this.user});
+
+  final User user;
+
+  @override
+  State<_AdminEntry> createState() => _AdminEntryState();
+}
+
+class _AdminEntryState extends State<_AdminEntry> {
+  late Future<bool> _adminCheck;
+
+  @override
+  void initState() {
+    super.initState();
+    _adminCheck = AdminService.instance.isAdmin();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AdminEntry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.user.uid != widget.user.uid) {
+      _adminCheck = AdminService.instance.isAdmin();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _adminCheck,
+      builder: (context, snapshot) {
+        if (snapshot.data != true) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 28),
+          child: _GroupedSurface(
+            children: [
+              _MenuRow(
+                icon: Icons.admin_panel_settings_outlined,
+                title: 'Admin Dashboard',
+                subtitle: 'Review provider applications',
+                onTap: () => _ProfileContent._push(
+                  context,
+                  const AdminDashboardScreen(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

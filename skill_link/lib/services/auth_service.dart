@@ -20,6 +20,7 @@ class AuthService extends ChangeNotifier {
   static final AuthService instance = AuthService._internal();
 
   StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<User?>? _idTokenSubscription;
   User? _currentUser;
   bool _initialized = false;
 
@@ -30,6 +31,12 @@ class AuthService extends ChangeNotifier {
     if (_initialized) return;
     _currentUser = FirebaseAuth.instance.currentUser;
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      _currentUser = user;
+      notifyListeners();
+    });
+    _idTokenSubscription = FirebaseAuth.instance.idTokenChanges().listen((
+      user,
+    ) {
       _currentUser = user;
       notifyListeners();
     });
@@ -83,11 +90,48 @@ class AuthService extends ChangeNotifier {
     );
   }
 
-  Future<void> signIn({required String email, required String password}) {
-    return FirebaseAuth.instance.signInWithEmailAndPassword(
+  Future<void> signIn({required String email, required String password}) async {
+    final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
+    await credential.user?.getIdToken(true);
+  }
+
+  Future<bool> refreshAdminClaim() async {
+    final user = _currentUser ?? FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      debugPrint('[AuthService] Admin claim check skipped: no signed-in user.');
+      return false;
+    }
+    try {
+      await user.reload();
+      final refreshedUser = FirebaseAuth.instance.currentUser;
+      if (refreshedUser == null) {
+        debugPrint(
+          '[AuthService] Admin claim check failed: user signed out during refresh.',
+        );
+        return false;
+      }
+      final token = await refreshedUser.getIdTokenResult(true);
+      final isAdmin = token.claims?['admin'] == true;
+      debugPrint(
+        '[AuthService] Admin claim check for UID ${refreshedUser.uid}: '
+        'admin=$isAdmin',
+      );
+      return isAdmin;
+    } on FirebaseException catch (error, stackTrace) {
+      debugPrint(
+        '[AuthService] Admin claim refresh failed '
+        '(code=${error.code}): ${error.message ?? error}',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      return false;
+    } catch (error, stackTrace) {
+      debugPrint('[AuthService] Admin claim refresh failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return false;
+    }
   }
 
   Future<void> sendPasswordReset(String email) {
@@ -99,6 +143,7 @@ class AuthService extends ChangeNotifier {
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _idTokenSubscription?.cancel();
     super.dispose();
   }
 }

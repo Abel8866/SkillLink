@@ -6,6 +6,7 @@ initializeApp();
 
 const db = getFirestore();
 const registrations = db.collection("providerRegistrations");
+const region = "us-central1";
 
 function requireAdmin(request) {
   if (!request.auth) {
@@ -27,17 +28,25 @@ function serialize(snapshot) {
   };
 }
 
-exports.listProviderRegistrations = onCall(async (request) => {
+exports.listProviderRegistrations = onCall({ region }, async (request) => {
   requireAdmin(request);
-  const snapshot = await registrations.limit(200).get();
-  return {
-    registrations: snapshot.docs
-      .map(serialize)
-      .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")),
-  };
+  try {
+    const snapshot = await registrations.limit(200).get();
+    return {
+      registrations: snapshot.docs
+        .map(serialize)
+        .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")),
+    };
+  } catch (error) {
+    console.error("listProviderRegistrations failed", {
+      code: error.code,
+      message: error.message,
+    });
+    throw new HttpsError("internal", "Registrations could not be loaded.");
+  }
 });
 
-exports.reviewProviderRegistration = onCall(async (request) => {
+exports.reviewProviderRegistration = onCall({ region }, async (request) => {
   requireAdmin(request);
   const { registrationId, decision, rejectionReason } = request.data ?? {};
   if (typeof registrationId !== "string" ||
