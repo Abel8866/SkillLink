@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ProviderRegistrationStatus {
   pending('Pending'),
@@ -30,6 +31,7 @@ class ProviderRegistration {
     required this.status,
     this.profileImageUrl,
     this.ownerUid,
+    this.rejectionReason,
   });
 
   final String id;
@@ -49,6 +51,7 @@ class ProviderRegistration {
   final ProviderRegistrationStatus status;
   final String? profileImageUrl;
   final String? ownerUid;
+  final String? rejectionReason;
 
   String get formattedPrice => price == null
       ? 'Negotiable'
@@ -90,6 +93,7 @@ class ProviderRegistration {
     'status': status.name,
     'profileImageUrl': profileImageUrl,
     'ownerUid': ownerUid,
+    'rejectionReason': rejectionReason,
   };
 
   factory ProviderRegistration.fromJson(Map<String, dynamic> json) {
@@ -114,6 +118,43 @@ class ProviderRegistration {
       ),
       profileImageUrl: json['profileImageUrl'] as String?,
       ownerUid: json['ownerUid'] as String?,
+      rejectionReason: json['rejectionReason'] as String?,
+    );
+  }
+
+  factory ProviderRegistration.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    final data = snapshot.data()!;
+    final submittedAt = data['submittedAt'];
+    final createdAt = data['createdAt'];
+    final timestamp = submittedAt is Timestamp
+        ? submittedAt.toDate()
+        : createdAt is Timestamp
+        ? createdAt.toDate()
+        : DateTime.now();
+    return ProviderRegistration(
+      id: snapshot.id,
+      reference: data['reference'] as String? ?? snapshot.id,
+      fullName: data['fullName'] as String? ?? '',
+      phone: data['phone'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      location: data['location'] as String? ?? '',
+      category: data['category'] as String? ?? '',
+      professionalTitle: data['professionalTitle'] as String? ?? '',
+      experienceYears: (data['experienceYears'] as num?)?.toInt() ?? 0,
+      description: data['description'] as String? ?? '',
+      price: (data['price'] as num?)?.toDouble(),
+      pricingUnit: data['pricingUnit'] as String? ?? 'Negotiable',
+      availability: data['availability'] as String? ?? '',
+      submittedAt: timestamp,
+      status: ProviderRegistrationStatus.values.firstWhere(
+        (value) => value.name == data['status'],
+        orElse: () => ProviderRegistrationStatus.pending,
+      ),
+      profileImageUrl: data['profileImageUrl'] as String?,
+      ownerUid: data['ownerUid'] as String?,
+      rejectionReason: data['rejectionReason'] as String?,
     );
   }
 }

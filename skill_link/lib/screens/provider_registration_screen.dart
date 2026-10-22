@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 
 import '../data/service_categories.dart';
 import '../services/provider_registration_service.dart';
 import '../services/image_upload_service.dart';
+import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import 'provider_registration_success_screen.dart';
 
@@ -121,22 +122,46 @@ class _ProviderRegistrationScreenState
       return;
     }
 
-    setState(() => _isSubmitting = true);
+    final user = AuthService.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please sign in again before submitting a registration.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _uploadProgress = null;
+    });
     String? uploadedImageUrl;
-    final user = FirebaseAuth.instance.currentUser;
     final registrationId = _registrationService.newRegistrationId();
     final registrationReference = _registrationService
         .newRegistrationReference();
     try {
-      if (_selectedImage != null && user != null) {
-        uploadedImageUrl = await ImageUploadService.instance.upload(
-          file: _selectedImage!,
-          path:
-              'providerRegistrations/${user.uid}/$registrationId/profileImage',
-          onProgress: (progress) {
-            if (mounted) setState(() => _uploadProgress = progress);
-          },
-        );
+      if (_selectedImage != null) {
+        try {
+          uploadedImageUrl = await ImageUploadService.instance.upload(
+            file: _selectedImage!,
+            path:
+                'providerRegistrations/${user.uid}/$registrationId/profileImage',
+            onProgress: (progress) {
+              if (mounted) setState(() => _uploadProgress = progress);
+            },
+          );
+        } on FirebaseException catch (error, stackTrace) {
+          debugPrint(
+            '[ProviderRegistration] Image upload failed '
+            '(path=providerRegistrations/{uid}/$registrationId/profileImage, '
+            'code=${error.code}): ${error.message ?? error}',
+          );
+          debugPrintStack(stackTrace: stackTrace);
+          rethrow;
+        }
       }
       final registration = await _registrationService.submit(
         fullName: _nameController.text.trim(),
@@ -153,7 +178,7 @@ class _ProviderRegistrationScreenState
         pricingUnit: _pricingUnit!,
         availability: _availability!,
         profileImageUrl: uploadedImageUrl,
-        ownerUid: user?.uid,
+        ownerUid: user.uid,
         registrationId: registrationId,
         registrationReference: registrationReference,
       );
@@ -164,7 +189,7 @@ class _ProviderRegistrationScreenState
               ProviderRegistrationSuccessScreen(registration: registration),
         ),
       );
-    } catch (error) {
+    } on ProviderRegistrationPersistenceException catch (error) {
       if (uploadedImageUrl != null) {
         try {
           await ImageUploadService.instance.deleteIfPresent(uploadedImageUrl);
@@ -172,7 +197,35 @@ class _ProviderRegistrationScreenState
           debugPrint('Provider image cleanup failed: $cleanupError');
         }
       }
-      debugPrint('Provider registration failed: $error');
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.phase == 'Firestore persistence'
+                ? 'Registration could not be saved. Please try again.'
+                : 'Registration could not be saved locally. Please try again.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on FirebaseException catch (error, stackTrace) {
+      debugPrint(
+        '[ProviderRegistration] Unexpected Firebase failure '
+        '(code=${error.code}): ${error.message ?? error}',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registration could not be saved. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error, stackTrace) {
+      debugPrint('[ProviderRegistration] Unexpected failure: $error');
+      debugPrintStack(stackTrace: stackTrace);
       if (!mounted) return;
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(

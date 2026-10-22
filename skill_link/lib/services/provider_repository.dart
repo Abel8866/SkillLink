@@ -58,6 +58,7 @@ class ProviderRepository {
             debugPrint('[ProviderRepository] Provider query failed: $error');
           }
           debugPrintStack(stackTrace: stackTrace);
+          Error.throwWithStackTrace(error, stackTrace);
         });
   }
 

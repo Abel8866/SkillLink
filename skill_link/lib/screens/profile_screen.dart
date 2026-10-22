@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../services/auth_service.dart';
 import '../services/image_upload_service.dart';
+import '../services/admin_service.dart';
 import '../services/user_profile_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/profile_image.dart';
@@ -12,6 +13,7 @@ import 'my_bookings_screen.dart';
 import 'premium_screen.dart';
 import 'provider_registration_screen.dart';
 import 'provider_registrations_screen.dart';
+import 'admin_dashboard_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -91,6 +93,27 @@ class _ProfileContent extends StatelessWidget {
                 onSignOut: () => _confirmSignOut(context),
               ),
             const SizedBox(height: 28),
+            if (isSignedIn)
+              FutureBuilder<bool>(
+                future: AdminService.instance.isAdmin(),
+                builder: (context, snapshot) {
+                  if (snapshot.data != true) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 28),
+                    child: _GroupedSurface(
+                      children: [
+                        _MenuRow(
+                          icon: Icons.admin_panel_settings_outlined,
+                          title: 'Admin Dashboard',
+                          subtitle: 'Review provider applications',
+                          onTap: () =>
+                              _push(context, const AdminDashboardScreen()),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             const _SectionHeader(title: 'Your Activity'),
             const SizedBox(height: 12),
             Row(

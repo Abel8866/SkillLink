@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/provider_registration.dart';
 import '../services/provider_registration_service.dart';
@@ -12,21 +13,33 @@ class ProviderRegistrationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('My Provider Registration')),
-      body: AnimatedBuilder(
-        animation: ProviderRegistrationService.instance,
-        builder: (context, _) {
-          final registrations =
-              ProviderRegistrationService.instance.registrations;
-          if (registrations.isEmpty) return _EmptyState();
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: registrations.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (_, index) =>
-                _RegistrationCard(registration: registrations[index]),
-          );
-        },
-      ),
+      body: FirebaseAuth.instance.currentUser == null
+          ? const Center(child: Text('Please sign in to view registrations.'))
+          : StreamBuilder<List<ProviderRegistration>>(
+              stream: ProviderRegistrationService.instance
+                  .watchOwnerRegistrations(
+                    FirebaseAuth.instance.currentUser!.uid,
+                  ),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(
+                    child: Text('Could not load registration status.'),
+                  );
+                }
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final registrations = snapshot.data!;
+                if (registrations.isEmpty) return _EmptyState();
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: registrations.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (_, index) =>
+                      _RegistrationCard(registration: registrations[index]),
+                );
+              },
+            ),
     );
   }
 }
@@ -55,7 +68,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Your registration information will be stored only on this device.',
+              'Your registration status will update here after review.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -156,6 +169,16 @@ class _RegistrationCard extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            if (registration.status == ProviderRegistrationStatus.rejected &&
+                registration.rejectionReason?.isNotEmpty == true) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Rejection reason: ${registration.rejectionReason}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
           ],
         ),
       ),

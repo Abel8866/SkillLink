@@ -508,8 +508,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Be one of the first to offer your services on SkillLink.',
+              'Check back soon or register to offer your services on SkillLink.',
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ProviderRegistrationScreen(),
+                ),
+              ),
+              icon: const Icon(Icons.add_business_outlined),
+              label: const Text('Register as a provider'),
             ),
           ],
         ),
