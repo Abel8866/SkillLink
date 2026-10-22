@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/service_provider.dart';
 import '../screens/provider_details_screen.dart';
+import 'profile_image.dart';
 
 /// Horizontally scrollable list of providers displayed as summary cards.
 class ProviderCard extends StatelessWidget {
@@ -40,18 +41,15 @@ class ProviderCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
+              ProfileImage(
+                url: provider.imageUrl,
+                initials: provider.name
+                    .split(RegExp(r'\s+'))
+                    .take(2)
+                    .map((part) => part.isEmpty ? '' : part[0])
+                    .join()
+                    .toUpperCase(),
                 radius: 28,
-                child: ClipOval(
-                  child: Image.network(
-                    provider.imageUrl,
-                    width: 54,
-                    height: 54,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) =>
-                        const Icon(Icons.person, size: 28),
-                  ),
-                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -89,24 +87,26 @@ class ProviderCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(
-                          Icons.star_rounded,
-                          size: 16,
-                          color: theme.colorScheme.tertiary,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          provider.rating.toStringAsFixed(1),
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        if (provider.reviewCount > 0) ...[
+                          Icon(
+                            Icons.star_rounded,
+                            size: 16,
+                            color: theme.colorScheme.tertiary,
                           ),
-                        ),
-                        Text(
-                          ' (${provider.reviewCount})',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          const SizedBox(width: 3),
+                          Text(
+                            provider.rating.toStringAsFixed(1),
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
+                          Text(
+                            ' (${provider.reviewCount})',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                         const Spacer(),
                         Text(
                           provider.formattedPrice,

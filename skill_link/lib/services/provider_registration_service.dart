@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/provider_registration.dart';
@@ -15,6 +16,7 @@ class ProviderRegistrationService extends ChangeNotifier {
   static const _registrationsKey = 'skilllink_provider_registrations';
 
   final List<ProviderRegistration> _registrations = [];
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   List<ProviderRegistration> get registrations =>
       List.unmodifiable(_registrations);
@@ -58,10 +60,14 @@ class ProviderRegistrationService extends ChangeNotifier {
     required double? price,
     required String pricingUnit,
     required String availability,
+    String? profileImageUrl,
+    String? ownerUid,
+    String? registrationId,
+    String? registrationReference,
   }) async {
     final registration = ProviderRegistration(
-      id: 'pr-${DateTime.now().microsecondsSinceEpoch}',
-      reference: _newReference(),
+      id: registrationId ?? newRegistrationId(),
+      reference: registrationReference ?? _newReference(),
       fullName: fullName,
       phone: phone,
       email: email,
@@ -75,10 +81,22 @@ class ProviderRegistrationService extends ChangeNotifier {
       availability: availability,
       submittedAt: DateTime.now(),
       status: ProviderRegistrationStatus.pending,
+      profileImageUrl: profileImageUrl,
+      ownerUid: ownerUid,
     );
 
-    _registrations.insert(0, registration);
     try {
+      if (ownerUid != null) {
+        await _firestore
+            .collection('providerRegistrations')
+            .doc(registration.id)
+            .set({
+              ...registration.toJson(),
+              'createdAt': FieldValue.serverTimestamp(),
+              'status': ProviderRegistrationStatus.pending.name,
+            });
+      }
+      _registrations.insert(0, registration);
       await _save();
     } catch (error) {
       _registrations.remove(registration);
@@ -88,6 +106,10 @@ class ProviderRegistrationService extends ChangeNotifier {
     notifyListeners();
     return registration;
   }
+
+  String newRegistrationId() => 'pr-${DateTime.now().microsecondsSinceEpoch}';
+
+  String newRegistrationReference() => _newReference();
 
   String _newReference() {
     final random = Random.secure();

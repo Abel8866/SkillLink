@@ -64,7 +64,6 @@ class _AuthScreenState extends State<AuthScreen> {
           password: _passwordController.text,
         );
       }
-      if (mounted) Navigator.of(context).pop();
     } on ProfileCreationException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -91,7 +90,6 @@ class _AuthScreenState extends State<AuthScreen> {
       await AuthService.instance.retryProfileCreation(
         name: _nameController.text,
       );
-      if (mounted) Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
       setState(
@@ -149,14 +147,35 @@ class _AuthScreenState extends State<AuthScreen> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            Icon(
-              Icons.lock_person_outlined,
-              size: 56,
-              color: theme.colorScheme.primary,
+            Center(
+              child: Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(
+                  Icons.handyman_rounded,
+                  size: 34,
+                  color: Colors.white,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Text(
-              _isRegistration ? 'Join SkillLink' : 'Welcome back',
+              'SkillLink',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _isRegistration
+                  ? 'Create your SkillLink account'
+                  : 'Find trusted local services.',
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -165,8 +184,8 @@ class _AuthScreenState extends State<AuthScreen> {
             const SizedBox(height: 8),
             Text(
               _isRegistration
-                  ? 'Create your customer account to manage your SkillLink activity.'
-                  : 'Sign in to access your account and profile.',
+                  ? 'Create an account to manage your bookings and profile.'
+                  : 'Sign in to manage your bookings and discover local professionals.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:skill_link/main.dart';
@@ -9,6 +10,6 @@ void main() {
     await tester.pumpWidget(const SkillLinkApp());
     await tester.pump();
 
-    expect(find.text('SkillLink'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 }

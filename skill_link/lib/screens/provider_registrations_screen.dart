@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/provider_registration.dart';
 import '../services/provider_registration_service.dart';
 import 'provider_registration_screen.dart';
+import '../widgets/profile_image.dart';
 
 class ProviderRegistrationsScreen extends StatelessWidget {
   const ProviderRegistrationsScreen({super.key});
@@ -96,6 +97,17 @@ class _RegistrationCard extends StatelessWidget {
           children: [
             Row(
               children: [
+                ProfileImage(
+                  url: registration.profileImageUrl,
+                  initials: registration.fullName
+                      .split(RegExp(r'\s+'))
+                      .take(2)
+                      .map((part) => part.isEmpty ? '' : part[0])
+                      .join()
+                      .toUpperCase(),
+                  radius: 24,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     registration.fullName,

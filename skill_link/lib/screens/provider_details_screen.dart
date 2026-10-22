@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../models/service_provider.dart';
 import '../theme/app_colors.dart';
 import 'booking_screen.dart';
+import '../widgets/profile_image.dart';
 
 class ProviderDetailsScreen extends StatelessWidget {
   const ProviderDetailsScreen({super.key, required this.provider});
@@ -76,22 +77,16 @@ class ProviderDetailsScreen extends StatelessWidget {
                 children: [
                   Stack(
                     children: [
-                      CircleAvatar(
+                      ProfileImage(
+                        url: provider.imageUrl,
+                        initials: provider.name
+                            .split(RegExp(r'\s+'))
+                            .take(2)
+                            .map((part) => part.isEmpty ? '' : part[0])
+                            .join()
+                            .toUpperCase(),
                         radius: 56,
                         backgroundColor: theme.colorScheme.primaryContainer,
-                        child: ClipOval(
-                          child: Image.network(
-                            provider.imageUrl,
-                            width: 112,
-                            height: 112,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Icon(
-                              Icons.person_rounded,
-                              size: 56,
-                              color: theme.colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                        ),
                       ),
                       if (provider.isVerified)
                         Positioned(
@@ -102,7 +97,10 @@ class ProviderDetailsScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primary,
                               shape: BoxShape.circle,
-                              border: Border.all(color: theme.colorScheme.surface, width: 3),
+                              border: Border.all(
+                                color: theme.colorScheme.surface,
+                                width: 3,
+                              ),
                             ),
                             child: Icon(
                               Icons.verified_rounded,
@@ -173,11 +171,16 @@ class ProviderDetailsScreen extends StatelessWidget {
                   if (provider.availability != null) ...[
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.successLight,
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: AppColors.success.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -207,23 +210,25 @@ class ProviderDetailsScreen extends StatelessWidget {
             // Stats row
             Row(
               children: [
-                Expanded(
-                  child: _StatCard(
-                    icon: Icons.star_rounded,
-                    value: provider.rating.toStringAsFixed(1),
-                    label: 'Rating',
-                    iconColor: theme.colorScheme.tertiary,
+                if (provider.reviewCount > 0) ...[
+                  Expanded(
+                    child: _StatCard(
+                      icon: Icons.star_rounded,
+                      value: provider.rating.toStringAsFixed(1),
+                      label: 'Rating',
+                      iconColor: theme.colorScheme.tertiary,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _StatCard(
-                    icon: Icons.reviews_rounded,
-                    value: '${provider.reviewCount}',
-                    label: 'Reviews',
-                    iconColor: theme.colorScheme.onSurfaceVariant,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _StatCard(
+                      icon: Icons.reviews_rounded,
+                      value: '${provider.reviewCount}',
+                      label: 'Reviews',
+                      iconColor: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(width: 10),
                 Expanded(
                   child: _StatCard(
@@ -243,14 +248,22 @@ class ProviderDetailsScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
+                  color: theme.colorScheme.secondaryContainer.withValues(
+                    alpha: 0.3,
+                  ),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.colorScheme.secondary.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: theme.colorScheme.secondary.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.star_rounded, size: 18, color: theme.colorScheme.secondary),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 18,
+                      color: theme.colorScheme.secondary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Featured Professional',
@@ -322,8 +335,13 @@ class ProviderDetailsScreen extends StatelessWidget {
                       (skill) => Chip(
                         label: Text(skill.trim()),
                         visualDensity: VisualDensity.compact,
-                        backgroundColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
-                        side: BorderSide(color: theme.colorScheme.secondary.withValues(alpha: 0.3)),
+                        backgroundColor: theme.colorScheme.secondaryContainer
+                            .withValues(alpha: 0.3),
+                        side: BorderSide(
+                          color: theme.colorScheme.secondary.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
                       ),
                     ),
               ],
@@ -380,33 +398,14 @@ class ProviderDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Demo reviews section
-            if (provider.reviewCount > 0) ...[
-              Text(
-                'Sample Reviews (Demo)',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'These are fictional reviews for demonstration purposes.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              const SizedBox(height: 12),
-              ..._buildDemoReviews(theme),
-              const SizedBox(height: 24),
-            ],
-
             // Verification disclaimer
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
@@ -446,89 +445,6 @@ class ProviderDetailsScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  List<Widget> _buildDemoReviews(ThemeData theme) {
-    final demoReviews = [
-      {
-        'name': 'Abebe K.',
-        'rating': 5.0,
-        'text': 'Excellent service! Very professional and knowledgeable.',
-        'date': '2 weeks ago',
-      },
-      {
-        'name': 'Meron D.',
-        'rating': 4.5,
-        'text': 'Great experience, would definitely recommend to others.',
-        'date': '1 month ago',
-      },
-      {
-        'name': 'Samuel T.',
-        'rating': 4.0,
-        'text': 'Good quality work, arrived on time and cleaned up after.',
-        'date': '3 months ago',
-      },
-    ];
-
-    return demoReviews.map((review) {
-      return Card(
-        elevation: 0,
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    child: Text(
-                      review['name'].toString().substring(0, 1),
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    review['name'] as String,
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      Icon(Icons.star_rounded, size: 14, color: theme.colorScheme.tertiary),
-                      const SizedBox(width: 2),
-                      Text(
-                        (review['rating'] as double).toStringAsFixed(1),
-                        style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                review['text'] as String,
-                style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                review['date'] as String,
-                style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ],
-          ),
-        ),
-      );
-    }).toList();
   }
 }
 

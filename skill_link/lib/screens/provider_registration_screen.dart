@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 
-import '../data/sample_providers.dart';
+import '../data/service_categories.dart';
 import '../services/provider_registration_service.dart';
+import '../services/image_upload_service.dart';
 import '../theme/app_colors.dart';
 import 'provider_registration_success_screen.dart';
 
@@ -29,6 +33,8 @@ class _ProviderRegistrationScreenState
   String? _pricingUnit;
   String? _availability;
   bool _isSubmitting = false;
+  XFile? _selectedImage;
+  double? _uploadProgress;
 
   static const _pricingUnits = [
     'Per hour',
@@ -116,7 +122,22 @@ class _ProviderRegistrationScreenState
     }
 
     setState(() => _isSubmitting = true);
+    String? uploadedImageUrl;
+    final user = FirebaseAuth.instance.currentUser;
+    final registrationId = _registrationService.newRegistrationId();
+    final registrationReference = _registrationService
+        .newRegistrationReference();
     try {
+      if (_selectedImage != null && user != null) {
+        uploadedImageUrl = await ImageUploadService.instance.upload(
+          file: _selectedImage!,
+          path:
+              'providerRegistrations/${user.uid}/$registrationId/profileImage',
+          onProgress: (progress) {
+            if (mounted) setState(() => _uploadProgress = progress);
+          },
+        );
+      }
       final registration = await _registrationService.submit(
         fullName: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
@@ -131,6 +152,10 @@ class _ProviderRegistrationScreenState
             : double.parse(_priceController.text.trim()),
         pricingUnit: _pricingUnit!,
         availability: _availability!,
+        profileImageUrl: uploadedImageUrl,
+        ownerUid: user?.uid,
+        registrationId: registrationId,
+        registrationReference: registrationReference,
       );
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -140,6 +165,13 @@ class _ProviderRegistrationScreenState
         ),
       );
     } catch (error) {
+      if (uploadedImageUrl != null) {
+        try {
+          await ImageUploadService.instance.deleteIfPresent(uploadedImageUrl);
+        } catch (cleanupError) {
+          debugPrint('Provider image cleanup failed: $cleanupError');
+        }
+      }
       debugPrint('Provider registration failed: $error');
       if (!mounted) return;
       setState(() => _isSubmitting = false);
@@ -149,6 +181,42 @@ class _ProviderRegistrationScreenState
           behavior: SnackBarBehavior.floating,
         ),
       );
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    try {
+      final image = await ImageUploadService.instance.pickImage(source);
+      if (image == null) return;
+      await ImageUploadService.instance.validate(image);
+      if (mounted) setState(() => _selectedImage = image);
+    } on ImageValidationException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error) {
+      debugPrint('Provider image selection failed: $error');
     }
   }
 
@@ -179,10 +247,17 @@ class _ProviderRegistrationScreenState
             ),
             const SizedBox(height: 8),
             Text(
-              'This is a local prototype. Your registration will be stored on this device and remain pending review.',
+              'Your registration is saved on this device and submitted securely for review. It remains pending until approved.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
+            ),
+            const SizedBox(height: 24),
+            _sectionTitle('Profile photo (optional)'),
+            _ProviderImagePicker(
+              image: _selectedImage,
+              onTap: _isSubmitting ? null : _pickImage,
+              progress: _uploadProgress,
             ),
             const SizedBox(height: 24),
             _sectionTitle('Personal information'),
@@ -369,6 +444,73 @@ class _ProviderRegistrationScreenState
         textInputAction: maxLines > 1
             ? TextInputAction.newline
             : TextInputAction.next,
+      ),
+    );
+  }
+}
+
+class _ProviderImagePicker extends StatelessWidget {
+  const _ProviderImagePicker({
+    required this.image,
+    required this.onTap,
+    required this.progress,
+  });
+
+  final XFile? image;
+  final VoidCallback? onTap;
+  final double? progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 32,
+              child: image == null
+                  ? const Icon(Icons.add_a_photo_outlined)
+                  : FutureBuilder<Uint8List>(
+                      future: image!.readAsBytes(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const CircularProgressIndicator();
+                        }
+                        return ClipOval(
+                          child: Image.memory(
+                            snapshot.data!,
+                            width: 64,
+                            height: 64,
+                            fit: BoxFit.cover,
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                progress == null
+                    ? (image == null
+                          ? 'Add a professional photo'
+                          : 'Photo selected')
+                    : 'Uploading ${(progress! * 100).round()}%',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded),
+          ],
+        ),
       ),
     );
   }

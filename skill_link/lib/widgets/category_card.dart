@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../data/sample_providers.dart';
-import '../screens/provider_details_screen.dart';
+import '../data/service_categories.dart';
 
 /// A compact card representing a service category. Tapping it opens the
 /// explore screen pre-filtered to that category.
 class CategoryCard extends StatelessWidget {
-  const CategoryCard({
-    super.key,
-    required this.category,
-    required this.onTap,
-  });
+  const CategoryCard({super.key, required this.category, required this.onTap});
 
   final ProviderCategory category;
   final VoidCallback onTap;
@@ -30,11 +25,7 @@ class CategoryCard extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                category.icon,
-                color: theme.colorScheme.primary,
-                size: 26,
-              ),
+              Icon(category.icon, color: theme.colorScheme.primary, size: 26),
               const SizedBox(width: 10),
               Flexible(
                 child: Text(
@@ -51,20 +42,4 @@ class CategoryCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Convenience helper used by the app shell to push an explore view
-/// filtered to a single category.
-void openCategory(BuildContext context, String categoryName) {
-  Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) {
-        final provider = sampleProviders.firstWhere(
-          (p) => p.category == categoryName,
-          orElse: () => sampleProviders.first,
-        );
-        return ProviderDetailsScreen(provider: provider);
-      },
-    ),
-  );
 }

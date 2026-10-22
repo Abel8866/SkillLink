@@ -21,8 +21,26 @@ service cloud.firestore {
         && request.resource.data.role == resource.data.role
         && request.resource.data.email == resource.data.email
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['name']);
+          .hasOnly(['name', 'profileImageUrl']);
 
+      allow delete: if false;
+    }
+
+    match /providerRegistrations/{registrationId} {
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.ownerUid is string;
+      allow read: if (request.auth != null
+          && resource.data.ownerUid == request.auth.uid)
+        || (resource.data.status == 'approved'
+          && resource.data.isPublished == true);
+      allow update: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['profileImageUrl']);
       allow delete: if false;
     }
   }

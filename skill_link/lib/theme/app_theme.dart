@@ -239,17 +239,23 @@ ThemeData buildAppTheme() {
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: AppColors.error, width: 2),
       ),
-      labelStyle: textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+      labelStyle: textTheme.bodyMedium?.copyWith(
+        color: AppColors.textSecondary,
+      ),
       hintStyle: textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
       errorStyle: textTheme.bodySmall?.copyWith(color: AppColors.error),
-      floatingLabelStyle: textTheme.bodyMedium?.copyWith(color: AppColors.primary),
+      floatingLabelStyle: textTheme.bodyMedium?.copyWith(
+        color: AppColors.primary,
+      ),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: AppColors.surfaceContainerHighest.withValues(alpha: 0.5),
       selectedColor: AppColors.primary.withValues(alpha: 0.15),
       disabledColor: AppColors.border,
       labelStyle: textTheme.labelMedium,
-      secondaryLabelStyle: textTheme.labelMedium?.copyWith(color: AppColors.primary),
+      secondaryLabelStyle: textTheme.labelMedium?.copyWith(
+        color: AppColors.primary,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(999),
@@ -285,7 +291,9 @@ ThemeData buildAppTheme() {
       indicatorColor: AppColors.primary,
       indicatorSize: TabBarIndicatorSize.label,
       labelStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-      unselectedLabelStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+      unselectedLabelStyle: textTheme.labelLarge?.copyWith(
+        fontWeight: FontWeight.w500,
+      ),
       dividerColor: AppColors.border,
     ),
     dividerTheme: DividerThemeData(
@@ -301,16 +309,24 @@ ThemeData buildAppTheme() {
       iconColor: AppColors.textSecondary,
       textColor: AppColors.textPrimary,
       titleTextStyle: textTheme.titleMedium,
-      subtitleTextStyle: textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-      leadingAndTrailingTextStyle: textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+      subtitleTextStyle: textTheme.bodyMedium?.copyWith(
+        color: AppColors.textSecondary,
+      ),
+      leadingAndTrailingTextStyle: textTheme.bodyMedium?.copyWith(
+        color: AppColors.textSecondary,
+      ),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      titleTextStyle: textTheme.titleLarge?.copyWith(color: AppColors.textPrimary),
-      contentTextStyle: textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
+      titleTextStyle: textTheme.titleLarge?.copyWith(
+        color: AppColors.textPrimary,
+      ),
+      contentTextStyle: textTheme.bodyMedium?.copyWith(
+        color: AppColors.textPrimary,
+      ),
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: AppColors.surface,
@@ -323,7 +339,9 @@ ThemeData buildAppTheme() {
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: AppColors.textPrimary,
-      contentTextStyle: textTheme.bodyMedium?.copyWith(color: AppColors.surface),
+      contentTextStyle: textTheme.bodyMedium?.copyWith(
+        color: AppColors.surface,
+      ),
       actionTextColor: AppColors.secondary,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -361,7 +379,8 @@ ThemeData buildAppTheme() {
         return AppColors.surface;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return AppColors.primary.withValues(alpha: 0.5);
+        if (states.contains(WidgetState.selected))
+          return AppColors.primary.withValues(alpha: 0.5);
         return AppColors.border;
       }),
     ),
@@ -371,7 +390,9 @@ ThemeData buildAppTheme() {
       thumbColor: AppColors.primary,
       overlayColor: AppColors.primary.withValues(alpha: 0.15),
       valueIndicatorColor: AppColors.primary,
-      valueIndicatorTextStyle: textTheme.labelSmall?.copyWith(color: AppColors.textOnPrimary),
+      valueIndicatorTextStyle: textTheme.labelSmall?.copyWith(
+        color: AppColors.textOnPrimary,
+      ),
     ),
     datePickerTheme: DatePickerThemeData(
       backgroundColor: AppColors.surface,
@@ -379,15 +400,19 @@ ThemeData buildAppTheme() {
       headerBackgroundColor: AppColors.primary,
       headerForegroundColor: AppColors.textOnPrimary,
       dayForegroundColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return AppColors.textOnPrimary;
+        if (states.contains(WidgetState.selected))
+          return AppColors.textOnPrimary;
         return AppColors.textPrimary;
       }),
       dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) return AppColors.primary;
-        if (states.contains(WidgetState.hovered)) return AppColors.primary.withValues(alpha: 0.12);
+        if (states.contains(WidgetState.hovered))
+          return AppColors.primary.withValues(alpha: 0.12);
         return Colors.transparent;
       }),
-      weekdayStyle: textTheme.labelSmall?.copyWith(color: AppColors.textSecondary),
+      weekdayStyle: textTheme.labelSmall?.copyWith(
+        color: AppColors.textSecondary,
+      ),
       yearForegroundColor: WidgetStateProperty.all(AppColors.textPrimary),
       yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) return AppColors.primary;
@@ -402,7 +427,8 @@ ThemeData buildAppTheme() {
         return AppColors.surfaceContainerHighest;
       }),
       hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return AppColors.textOnPrimary;
+        if (states.contains(WidgetState.selected))
+          return AppColors.textOnPrimary;
         return AppColors.textPrimary;
       }),
       dayPeriodColor: WidgetStateColor.resolveWith((states) {
@@ -410,7 +436,8 @@ ThemeData buildAppTheme() {
         return AppColors.surfaceContainerHighest;
       }),
       dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return AppColors.textOnPrimary;
+        if (states.contains(WidgetState.selected))
+          return AppColors.textOnPrimary;
         return AppColors.textPrimary;
       }),
       dialHandColor: AppColors.primary,
@@ -418,16 +445,16 @@ ThemeData buildAppTheme() {
       entryModeIconColor: AppColors.primary,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
-    extensions: <ThemeExtension<dynamic>>[
-      _SkillLinkThemeExtension(),
-    ],
+    extensions: <ThemeExtension<dynamic>>[_SkillLinkThemeExtension()],
   );
 }
 
-class _SkillLinkThemeExtension extends ThemeExtension<_SkillLinkThemeExtension> {
+class _SkillLinkThemeExtension
+    extends ThemeExtension<_SkillLinkThemeExtension> {
   @override
   _SkillLinkThemeExtension copyWith() => _SkillLinkThemeExtension();
 
   @override
-  _SkillLinkThemeExtension lerp(_SkillLinkThemeExtension? other, double t) => this;
+  _SkillLinkThemeExtension lerp(_SkillLinkThemeExtension? other, double t) =>
+      this;
 }

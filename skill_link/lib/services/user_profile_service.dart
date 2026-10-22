@@ -36,4 +36,13 @@ class UserProfileService {
   Stream<DocumentSnapshot<Map<String, dynamic>>> profileStream(String uid) {
     return _firestore.collection('users').doc(uid).snapshots();
   }
+
+  Future<void> updateProfileImage({
+    required String uid,
+    required String imageUrl,
+  }) {
+    return _firestore.collection('users').doc(uid).update({
+      'profileImageUrl': imageUrl,
+    });
+  }
 }

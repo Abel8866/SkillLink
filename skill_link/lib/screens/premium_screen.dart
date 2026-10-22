@@ -64,9 +64,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('SkillLink Premium'),
-      ),
+      appBar: AppBar(title: const Text('SkillLink Premium')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -119,10 +117,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      benefit.icon,
-                      color: theme.colorScheme.primary,
-                    ),
+                    Icon(benefit.icon, color: theme.colorScheme.primary),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -157,13 +152,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
             ),
             const SizedBox(height: 12),
             ...(_plans.asMap().entries.map(
-                  (entry) => _PlanCard(
-                    plan: entry.value,
-                    selected: _selectedPlanIndex == entry.key,
-                    onTap: () =>
-                        setState(() => _selectedPlanIndex = entry.key),
-                  ),
-                )),
+              (entry) => _PlanCard(
+                plan: entry.value,
+                selected: _selectedPlanIndex == entry.key,
+                onTap: () => setState(() => _selectedPlanIndex = entry.key),
+              ),
+            )),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
@@ -234,8 +228,9 @@ class _PlanCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color:
-                  selected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outlineVariant,
               width: selected ? 2 : 1,
             ),
             color: selected
@@ -267,7 +262,9 @@ class _PlanCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.tertiaryContainer,
                               borderRadius: BorderRadius.circular(999),

@@ -28,6 +28,8 @@ class ProviderRegistration {
     required this.availability,
     required this.submittedAt,
     required this.status,
+    this.profileImageUrl,
+    this.ownerUid,
   });
 
   final String id;
@@ -45,6 +47,8 @@ class ProviderRegistration {
   final String availability;
   final DateTime submittedAt;
   final ProviderRegistrationStatus status;
+  final String? profileImageUrl;
+  final String? ownerUid;
 
   String get formattedPrice => price == null
       ? 'Negotiable'
@@ -84,6 +88,8 @@ class ProviderRegistration {
     'availability': availability,
     'submittedAt': submittedAt.toIso8601String(),
     'status': status.name,
+    'profileImageUrl': profileImageUrl,
+    'ownerUid': ownerUid,
   };
 
   factory ProviderRegistration.fromJson(Map<String, dynamic> json) {
@@ -106,6 +112,8 @@ class ProviderRegistration {
         (status) => status.name == json['status'],
         orElse: () => ProviderRegistrationStatus.pending,
       ),
+      profileImageUrl: json['profileImageUrl'] as String?,
+      ownerUid: json['ownerUid'] as String?,
     );
   }
 }

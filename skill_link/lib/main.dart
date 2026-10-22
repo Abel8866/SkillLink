@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import 'services/booking_service.dart';
 import 'services/auth_service.dart';
+import 'services/booking_service.dart';
 import 'services/provider_registration_service.dart';
 import 'firebase_options.dart';
+import 'screens/auth_screen.dart';
 import 'screens/explore_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/my_bookings_screen.dart';
@@ -29,7 +30,29 @@ class SkillLinkApp extends StatelessWidget {
       title: 'SkillLink',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
-      home: const HomePage(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: AuthService.instance,
+      builder: (context, _) {
+        if (!AuthService.instance.isInitialized) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (AuthService.instance.currentUser == null) {
+          return const AuthScreen();
+        }
+        return const HomePage();
+      },
     );
   }
 }

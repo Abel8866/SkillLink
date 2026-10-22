@@ -1,11 +1,8 @@
-/// SkillLink Explore Screen.
-/// Provider discovery with search, category filters, and sorting.
-library;
-
 import 'package:flutter/material.dart';
 
-import '../data/sample_providers.dart';
+import '../data/service_categories.dart';
 import '../models/service_provider.dart';
+import '../services/provider_repository.dart';
 import '../widgets/provider_card.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -20,9 +17,8 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   late String? _selectedCategory;
-  String _searchQuery = '';
-  String _sortBy =
-      'Relevance'; // Relevance, Price: Low to High, Price: High to Low, Rating
+  late String _searchQuery;
+  String _sortBy = 'Relevance';
 
   @override
   void initState() {
@@ -31,13 +27,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
     _searchQuery = widget.initialQuery ?? '';
   }
 
-  List<ServiceProvider> get _filteredProviders {
-    var results = sampleProviders.where((provider) {
+  List<ServiceProvider> _filterProviders(List<ServiceProvider> providers) {
+    final query = _searchQuery.trim().toLowerCase();
+    final results = providers.where((provider) {
       final matchesCategory =
           _selectedCategory == null ||
           _selectedCategory == 'All' ||
           provider.category == _selectedCategory;
-      final query = _searchQuery.trim().toLowerCase();
       final matchesQuery =
           query.isEmpty ||
           provider.name.toLowerCase().contains(query) ||
@@ -47,29 +43,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
       return matchesCategory && matchesQuery;
     }).toList();
 
-    // Apply sorting
     switch (_sortBy) {
       case 'Price: Low to High':
         results.sort((a, b) => a.price.compareTo(b.price));
-        break;
       case 'Price: High to Low':
         results.sort((a, b) => b.price.compareTo(a.price));
-        break;
       case 'Rating':
         results.sort((a, b) => b.rating.compareTo(a.rating));
-        break;
       case 'Relevance':
-      default:
-        // Already sorted by relevance (featured first, then rating)
         results.sort((a, b) {
-          if (a.isFeatured != b.isFeatured) {
-            return a.isFeatured ? -1 : 1;
-          }
-          return b.rating.compareTo(a.rating);
+          if (a.isFeatured != b.isFeatured) return a.isFeatured ? -1 : 1;
+          return b.reviewCount.compareTo(a.reviewCount);
         });
-        break;
     }
-
     return results;
   }
 
@@ -89,9 +75,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final results = _filteredProviders;
-    final filterCategories = providerCategories
-        .where((c) => c.name != 'All')
+    final categories = providerCategories
+        .where((category) => category.name != 'All')
         .toList();
 
     return Scaffold(
@@ -106,237 +91,206 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search input
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: TextField(
-              onChanged: (value) => setState(() => _searchQuery = value),
-              decoration: InputDecoration(
-                hintText: 'Search providers, skills, services…',
-                prefixIcon: const Icon(Icons.search_rounded),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
+      body: StreamBuilder<List<ServiceProvider>>(
+        stream: ProviderRepository.instance.watchApprovedProviders(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Services are temporarily unavailable. Please check your connection and try again.',
+                  textAlign: TextAlign.center,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded),
-                        onPressed: () => setState(() => _searchQuery = ''),
-                      )
-                    : null,
               ),
-            ),
-          ),
-
-          // Category filters
-          SizedBox(
-            height: 48,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              scrollDirection: Axis.horizontal,
-              itemCount: filterCategories.length + 1, // +1 for "All"
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (_, index) {
-                if (index == 0) {
-                  final isSelected =
-                      _selectedCategory == null || _selectedCategory == 'All';
-                  return FilterChip(
-                    selected: isSelected,
-                    label: const Text('All'),
-                    labelStyle: theme.textTheme.labelMedium,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedCategory = selected ? null : null;
-                      });
-                    },
-                  );
-                }
-                final category = filterCategories[index - 1];
-                final isSelected = category.name == _selectedCategory;
-                return FilterChip(
-                  selected: isSelected,
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        category.icon,
-                        size: 16,
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(category.name),
-                    ],
+            );
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final results = _filterProviders(snapshot.data!);
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TextField(
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  decoration: InputDecoration(
+                    hintText: 'Search providers, skills, services...',
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    filled: true,
+                    fillColor: theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded),
+                            onPressed: () => setState(() => _searchQuery = ''),
+                          )
+                        : null,
                   ),
-                  labelStyle: theme.textTheme.labelMedium,
-                  visualDensity: VisualDensity.compact,
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedCategory = selected && !isSelected
-                          ? category.name
-                          : null;
-                    });
+                ),
+              ),
+              SizedBox(
+                height: 48,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: categories.length + 1,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (_, index) {
+                    if (index == 0) {
+                      return FilterChip(
+                        selected:
+                            _selectedCategory == null ||
+                            _selectedCategory == 'All',
+                        label: const Text('All'),
+                        onSelected: (_) =>
+                            setState(() => _selectedCategory = null),
+                      );
+                    }
+                    final category = categories[index - 1];
+                    final selected = category.name == _selectedCategory;
+                    return FilterChip(
+                      selected: selected,
+                      label: Text(category.name),
+                      onSelected: (_) => setState(
+                        () =>
+                            _selectedCategory = selected ? null : category.name,
+                      ),
+                    );
                   },
-                );
-              },
-            ),
-          ),
-
-          // Sort control
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              children: [
-                Text(
-                  'Sort by:',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _sortBy,
-                    isDense: true,
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'Sort by:',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: theme.colorScheme.outlineVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _sortBy,
+                        isDense: true,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: theme.colorScheme.outlineVariant,
-                        ),
-                      ),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Relevance',
-                        child: Text('Relevance'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Rating',
-                        child: Text('Rating (Highest)'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Price: Low to High',
-                        child: Text('Price: Low to High'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Price: High to Low',
-                        child: Text('Price: High to Low'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _sortBy = value);
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Results count
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Text(
-                  '${results.length} ${results.length == 1 ? 'provider' : 'providers'} found',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const Spacer(),
-                if (_selectedCategory != null)
-                  Chip(
-                    label: Text(_selectedCategory!),
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted: () => setState(() => _selectedCategory = null),
-                    visualDensity: VisualDensity.compact,
-                    backgroundColor: theme.colorScheme.primary.withValues(
-                      alpha: 0.1,
-                    ),
-                    labelStyle: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                    ),
-                    deleteIconColor: theme.colorScheme.primary,
-                  ),
-              ],
-            ),
-          ),
-
-          // Results list
-          Expanded(
-            child: results.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search_off_rounded,
-                            size: 64,
-                            color: theme.colorScheme.outline,
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'Relevance',
+                            child: Text('Relevance'),
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No providers found',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                          DropdownMenuItem(
+                            value: 'Rating',
+                            child: Text('Rating (Highest)'),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _searchQuery.isNotEmpty
-                                ? 'Try adjusting your search or filters.'
-                                : 'No providers available in this category.',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                            textAlign: TextAlign.center,
+                          DropdownMenuItem(
+                            value: 'Price: Low to High',
+                            child: Text('Price: Low to High'),
                           ),
-                          const SizedBox(height: 16),
-                          if (_hasActiveFilters)
-                            OutlinedButton.icon(
-                              icon: const Icon(
-                                Icons.filter_alt_off_rounded,
-                                size: 18,
-                              ),
-                              label: const Text('Clear all filters'),
-                              onPressed: _clearFilters,
-                            ),
+                          DropdownMenuItem(
+                            value: 'Price: High to Low',
+                            child: Text('Price: High to Low'),
+                          ),
                         ],
+                        onChanged: (value) {
+                          if (value != null) setState(() => _sortBy = value);
+                        },
                       ),
                     ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: results.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (_, index) =>
-                        ProviderCard(provider: results[index]),
-                  ),
-          ),
-        ],
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      '${results.length} ${results.length == 1 ? 'provider' : 'providers'} found',
+                    ),
+                    const Spacer(),
+                    if (_selectedCategory != null)
+                      Chip(
+                        label: Text(_selectedCategory!),
+                        onDeleted: () =>
+                            setState(() => _selectedCategory = null),
+                      ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: results.isEmpty
+                    ? _emptyState(context)
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: results.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (_, index) =>
+                            ProviderCard(provider: results[index]),
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _emptyState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: 64,
+              color: Theme.of(context).colorScheme.outline,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No professionals available yet',
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Try another search, or be one of the first to offer services on SkillLink.',
+              textAlign: TextAlign.center,
+            ),
+            if (_hasActiveFilters) ...[
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: _clearFilters,
+                child: const Text('Clear all filters'),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
