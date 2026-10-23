@@ -33,13 +33,13 @@ gateway, must never be committed, and must be rotated if exposed.
 Install Deno separately, then run from this directory:
 
 ```powershell
-deno test --allow-net=www.googleapis.com,securetoken.google.com
+deno test tests/
 ```
 
-The tests use fake authentication and an in-memory Firestore gateway, so they
-do not access production data. The network permission is reserved for the
-real JWT verifier's public-key metadata test; no credentials are needed.
+The tests use fake authentication and an in-memory Firestore gateway, so they do
+not access production data. The network permission is reserved for the real JWT
+verifier's public-key metadata test; no credentials are needed.
 
-Deployment is intentionally not performed in Stage 1. Before deployment,
-review Supabase project limits, configure secrets, test in a non-production
+Deployment is intentionally not performed in Stage 1. Before deployment, review
+Supabase project limits, configure secrets, test in a non-production
 environment, and add the function URL to the Flutter adapter in a later stage.

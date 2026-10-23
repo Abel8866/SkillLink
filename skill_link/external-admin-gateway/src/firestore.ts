@@ -1,7 +1,4 @@
-import {
-  FIRESTORE_BASE_URL,
-  MAX_REGISTRATIONS,
-} from "./config.ts";
+import { FIRESTORE_BASE_URL, MAX_REGISTRATIONS } from "./config.ts";
 import { importPKCS8, SignJWT } from "npm:jose@5.10.0";
 
 type FirestoreValue = Record<string, unknown>;
@@ -64,53 +61,13 @@ export class FirestoreRestStore implements RegistrationStore {
   ) {}
 
   async list(): Promise<Registration[]> {
-    const url = `${this.baseUrl}/providerRegistrations?pageSize=${MAX_REGISTRATIONS}`;
+    const url =
+      `${this.baseUrl}/providerRegistrations?pageSize=${MAX_REGISTRATIONS}`;
     const response = await this.request(url);
     const body = await response.json() as { documents?: FirestoreDocument[] };
-    return (body.documents ?? []).map(toRegistration).map(toDashboardRegistration);
-  }
-
-  export async function createFirestoreStoreFromServiceAccount(
-    json: string,
-  ): Promise<FirestoreRestStore> {
-    const account = JSON.parse(json) as {
-      client_email?: string;
-      private_key?: string;
-    };
-    if (!account.client_email || !account.private_key) {
-      throw new Error("The Firebase service-account secret is invalid.");
-    }
-    const key = await importPKCS8(account.private_key, "RS256");
-    const now = Math.floor(Date.now() / 1000);
-    const assertion = await new SignJWT({
-      scope: "https://www.googleapis.com/auth/datastore",
-    })
-      .setProtectedHeader({ alg: "RS256", typ: "JWT" })
-      .setIssuer(account.client_email)
-      .setSubject(account.client_email)
-      .setAudience("https://oauth2.googleapis.com/token")
-      .setIssuedAt(now)
-      .setExpirationTime(now + 3600)
-      .sign(key);
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-        assertion,
-      }),
-    });
-    if (!tokenResponse.ok) {
-      console.error("Firestore OAuth token exchange failed", {
-        status: tokenResponse.status,
-      });
-      throw new Error("The Firestore service credential could not be used.");
-    }
-    const token = await tokenResponse.json() as { access_token?: string };
-    if (!token.access_token) {
-      throw new Error("The Firestore OAuth response was invalid.");
-    }
-    return new FirestoreRestStore(token.access_token);
+    return (body.documents ?? []).map(toRegistration).map(
+      toDashboardRegistration,
+    );
   }
 
   async review(
@@ -126,8 +83,12 @@ export class FirestoreRestStore implements RegistrationStore {
         body: JSON.stringify({ options: { readWrite: {} } }),
       },
     );
-    const transaction = await transactionResponse.json() as { transaction: string };
-    const documentName = `${this.baseUrl}/providerRegistrations/${encodeURIComponent(id)}`;
+    const transaction = await transactionResponse.json() as {
+      transaction: string;
+    };
+    const documentName = `${this.baseUrl}/providerRegistrations/${
+      encodeURIComponent(id)
+    }`;
     const readResponse = await this.request(
       `${this.baseUrl}:batchGet`,
       {
@@ -216,6 +177,49 @@ export class FirestoreRestStore implements RegistrationStore {
       return response;
     });
   }
+}
+
+export async function createFirestoreStoreFromServiceAccount(
+  json: string,
+): Promise<FirestoreRestStore> {
+  const account = JSON.parse(json) as {
+    client_email?: string;
+    private_key?: string;
+  };
+  if (!account.client_email || !account.private_key) {
+    throw new Error("The Firebase service-account secret is invalid.");
+  }
+  const key = await importPKCS8(account.private_key, "RS256");
+  const now = Math.floor(Date.now() / 1000);
+  const assertion = await new SignJWT({
+    scope: "https://www.googleapis.com/auth/datastore",
+  })
+    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
+    .setIssuer(account.client_email)
+    .setSubject(account.client_email)
+    .setAudience("https://oauth2.googleapis.com/token")
+    .setIssuedAt(now)
+    .setExpirationTime(now + 3600)
+    .sign(key);
+  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+  if (!tokenResponse.ok) {
+    console.error("Firestore OAuth token exchange failed", {
+      status: tokenResponse.status,
+    });
+    throw new Error("The Firestore service credential could not be used.");
+  }
+  const token = await tokenResponse.json() as { access_token?: string };
+  if (!token.access_token) {
+    throw new Error("The Firestore OAuth response was invalid.");
+  }
+  return new FirestoreRestStore(token.access_token);
 }
 
 function toRegistration(document: FirestoreDocument): Registration {

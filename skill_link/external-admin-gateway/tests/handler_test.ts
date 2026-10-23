@@ -42,7 +42,10 @@ class MemoryStore implements RegistrationStore {
   }
 }
 
-const adminAuth = async () => ({ uid: "verified-admin-uid", admin: true as const });
+const adminAuth = async () => ({
+  uid: "verified-admin-uid",
+  admin: true as const,
+});
 const regularAuth = async () => {
   throw new AuthError(403, "Administrator access is required.");
 };
@@ -97,7 +100,7 @@ Deno.test("wrong Firebase project token is rejected", async () => {
 });
 
 Deno.test("verified administrators can list registrations", async () => {
-  const registration = { id: "one", status: "pending" };
+  const registration: Registration = { id: "one", status: "pending" };
   const handler = createHandler(new MemoryStore([registration]), adminAuth);
   const response = await handler(request("/admin/registrations/list"));
   assertEquals(response.status, 200);
@@ -105,7 +108,7 @@ Deno.test("verified administrators can list registrations", async () => {
 });
 
 Deno.test("approval uses verified UID and publishes registration", async () => {
-  const registration = { id: "one", status: "pending" };
+  const registration: Registration = { id: "one", status: "pending" };
   const handler = createHandler(new MemoryStore([registration]), adminAuth);
   const response = await handler(
     request("/admin/registrations/review", {
@@ -120,7 +123,7 @@ Deno.test("approval uses verified UID and publishes registration", async () => {
 });
 
 Deno.test("rejection stores the reason and stays unpublished", async () => {
-  const registration = { id: "one", status: "pending" };
+  const registration: Registration = { id: "one", status: "pending" };
   const handler = createHandler(new MemoryStore([registration]), adminAuth);
   const response = await handler(
     request("/admin/registrations/review", {
@@ -139,7 +142,7 @@ Deno.test("rejection stores the reason and stays unpublished", async () => {
 });
 
 Deno.test("conflicting review is rejected", async () => {
-  const registration = { id: "one", status: "approved" };
+  const registration: Registration = { id: "one", status: "approved" };
   const handler = createHandler(new MemoryStore([registration]), adminAuth);
   const response = await handler(
     request("/admin/registrations/review", {
@@ -147,7 +150,7 @@ Deno.test("conflicting review is rejected", async () => {
       decision: "rejected",
     }),
   );
-  assertEquals(response.status, 500);
+  assertEquals(response.status, 409);
 });
 
 Deno.test("auth verifier rejects malformed tokens", async () => {

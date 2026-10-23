@@ -1,5 +1,15 @@
-export const FIREBASE_PROJECT_ID =
-  Deno.env.get("FIREBASE_PROJECT_ID") ?? "skilllink-636b6";
+function configuredProjectId(): string {
+  try {
+    return Deno.env.get("FIREBASE_PROJECT_ID") ?? "skilllink-636b6";
+  } catch (error) {
+    if (error instanceof Deno.errors.NotCapable) {
+      return "skilllink-636b6";
+    }
+    throw error;
+  }
+}
+
+export const FIREBASE_PROJECT_ID = configuredProjectId();
 
 export const FIREBASE_ISSUER =
   `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`;

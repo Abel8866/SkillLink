@@ -1,8 +1,8 @@
-import { AuthError, verifyAdminToken, VerifiedAdmin } from "./auth.ts";
+import { AuthError, VerifiedAdmin, verifyAdminToken } from "./auth.ts";
 import {
+  FirestoreError,
   RegistrationStore,
   ReviewDecision,
-  FirestoreError,
 } from "./firestore.ts";
 
 export type Authenticator = (
@@ -27,13 +27,20 @@ export function createHandler(
         const body = await request.json() as Record<string, unknown>;
         const id = body.registrationId;
         const decision = body.decision;
-        if (typeof id !== "string" ||
-            (decision !== "approved" && decision !== "rejected")) {
-          return json({ error: "A valid registration decision is required." }, 400);
+        if (
+          typeof id !== "string" ||
+          (decision !== "approved" && decision !== "rejected")
+        ) {
+          return json(
+            { error: "A valid registration decision is required." },
+            400,
+          );
         }
         const reason = body.rejectionReason;
-        if (reason !== undefined && reason !== null &&
-            typeof reason !== "string") {
+        if (
+          reason !== undefined && reason !== null &&
+          typeof reason !== "string"
+        ) {
           return json({ error: "The rejection reason is invalid." }, 400);
         }
         return json({
