@@ -1,5 +1,6 @@
-import { FIRESTORE_BASE_URL, MAX_REGISTRATIONS } from "./config.ts";
+import { getFirestoreBaseUrl, MAX_REGISTRATIONS } from "./config.ts";
 import { importPKCS8, SignJWT } from "npm:jose@5.10.0";
+import type { KeyLike } from "npm:jose@5.10.0";
 
 type FirestoreValue = Record<string, unknown>;
 type FirestoreDocument = {
@@ -55,10 +56,16 @@ export class FirestoreError extends Error {
 }
 
 export class FirestoreRestStore implements RegistrationStore {
+  private readonly accessTokenProvider: AccessTokenProvider;
+
   constructor(
-    private readonly accessToken: string,
-    private readonly baseUrl = FIRESTORE_BASE_URL,
-  ) {}
+    accessToken: string | AccessTokenProvider,
+    private readonly baseUrl = getFirestoreBaseUrl(),
+  ) {
+    this.accessTokenProvider = typeof accessToken === "string"
+      ? async () => accessToken
+      : accessToken;
+  }
 
   async list(): Promise<Registration[]> {
     const url =
@@ -129,7 +136,7 @@ export class FirestoreRestStore implements RegistrationStore {
         ? ["rejectionReason"]
         : []),
     ];
-    const commitResponse = await this.request(
+    await this.request(
       `${this.baseUrl}:commit`,
       {
         method: "POST",
@@ -147,37 +154,47 @@ export class FirestoreRestStore implements RegistrationStore {
         }),
       },
     );
-    if (!commitResponse.ok) {
-      throw new FirestoreError(
-        commitResponse.status,
-        "The registration changed before it could be reviewed.",
-      );
-    }
     return { id, status: decision };
   }
 
   private request(input: string, init: RequestInit = {}) {
-    return fetch(input, {
-      ...init,
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        "Content-Type": "application/json",
-        ...(init.headers ?? {}),
-      },
-    }).then(async (response) => {
+    return this.fetchWithToken(input, init).then(async (response) => {
       if (!response.ok) {
+        const message = response.status === 409
+          ? "The registration changed before it could be reviewed."
+          : "The data service request failed.";
         console.error("Firestore REST request failed", {
           status: response.status,
         });
-        throw new FirestoreError(
-          response.status,
-          "The data service request failed.",
-        );
+        throw new FirestoreError(response.status, message);
       }
       return response;
     });
   }
+
+  private async fetchWithToken(input: string, init: RequestInit) {
+    let token = await this.accessTokenProvider(false);
+    let response = await this.fetch(input, init, token);
+    if (response.status === 401) {
+      token = await this.accessTokenProvider(true);
+      response = await this.fetch(input, init, token);
+    }
+    return response;
+  }
+
+  private fetch(input: string, init: RequestInit, accessToken: string) {
+    return fetch(input, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        ...(init.headers ?? {}),
+      },
+    });
+  }
 }
+
+type AccessTokenProvider = (forceRefresh: boolean) => Promise<string>;
 
 export async function createFirestoreStoreFromServiceAccount(
   json: string,
@@ -190,13 +207,39 @@ export async function createFirestoreStoreFromServiceAccount(
     throw new Error("The Firebase service-account secret is invalid.");
   }
   const key = await importPKCS8(account.private_key, "RS256");
+  let cached: { value: string; expiresAt: number } | undefined;
+  let pending: Promise<string> | undefined;
+  const accessToken: AccessTokenProvider = async (forceRefresh) => {
+    const now = Date.now();
+    if (!forceRefresh && cached && cached.expiresAt > now + 60_000) {
+      return cached.value;
+    }
+    if (!pending) {
+      pending = acquireAccessToken(key, account.client_email!)
+        .then((token) => {
+          cached = token;
+          return token.value;
+        })
+        .finally(() => {
+          pending = undefined;
+        });
+    }
+    return pending;
+  };
+  return new FirestoreRestStore(accessToken);
+}
+
+async function acquireAccessToken(
+  key: KeyLike,
+  clientEmail: string,
+): Promise<{ value: string; expiresAt: number }> {
   const now = Math.floor(Date.now() / 1000);
   const assertion = await new SignJWT({
     scope: "https://www.googleapis.com/auth/datastore",
   })
     .setProtectedHeader({ alg: "RS256", typ: "JWT" })
-    .setIssuer(account.client_email)
-    .setSubject(account.client_email)
+    .setIssuer(clientEmail)
+    .setSubject(clientEmail)
     .setAudience("https://oauth2.googleapis.com/token")
     .setIssuedAt(now)
     .setExpirationTime(now + 3600)
@@ -215,11 +258,17 @@ export async function createFirestoreStoreFromServiceAccount(
     });
     throw new Error("The Firestore service credential could not be used.");
   }
-  const token = await tokenResponse.json() as { access_token?: string };
-  if (!token.access_token) {
+  const token = await tokenResponse.json() as {
+    access_token?: string;
+    expires_in?: number;
+  };
+  if (!token.access_token || !token.expires_in || token.expires_in <= 0) {
     throw new Error("The Firestore OAuth response was invalid.");
   }
-  return new FirestoreRestStore(token.access_token);
+  return {
+    value: token.access_token,
+    expiresAt: Date.now() + token.expires_in * 1000,
+  };
 }
 
 function toRegistration(document: FirestoreDocument): Registration {

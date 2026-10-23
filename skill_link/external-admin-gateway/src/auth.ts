@@ -1,8 +1,8 @@
 import { createRemoteJWKSet, jwtVerify } from "npm:jose@5.10.0";
 import {
-  FIREBASE_ISSUER,
   FIREBASE_KEY_URL,
-  FIREBASE_PROJECT_ID,
+  getFirebaseIssuer,
+  getFirebaseProjectId,
 } from "./config.ts";
 
 export type VerifiedAdmin = {
@@ -23,8 +23,8 @@ export async function verifyAdminToken(
 
   try {
     const { payload } = await jwtVerify(token, firebaseKeys, {
-      issuer: FIREBASE_ISSUER,
-      audience: FIREBASE_PROJECT_ID,
+      issuer: getFirebaseIssuer(),
+      audience: getFirebaseProjectId(),
       algorithms: ["RS256"],
     });
     if (typeof payload.sub !== "string" || payload.sub.length === 0) {

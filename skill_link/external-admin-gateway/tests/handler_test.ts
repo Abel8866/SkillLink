@@ -1,10 +1,16 @@
 import {
   assertEquals,
   assertRejects,
+  assertThrows,
 } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { AuthError } from "../src/auth.ts";
 import {
+  getFirebaseProjectId,
+  validateFirebaseProjectId,
+} from "../src/config.ts";
+import {
   FirestoreError,
+  FirestoreRestStore,
   Registration,
   RegistrationStore,
   ReviewDecision,
@@ -83,6 +89,30 @@ Deno.test("invalid token is rejected", async () => {
   );
 });
 
+Deno.test("missing project configuration fails closed", () => {
+  assertThrows(
+    () => getFirebaseProjectId(),
+    Error,
+    "FIREBASE_PROJECT_ID",
+  );
+});
+
+Deno.test("valid project IDs are accepted", () => {
+  assertEquals(validateFirebaseProjectId("skilllink-636b6"), "skilllink-636b6");
+});
+
+Deno.test("invalid project IDs are rejected", () => {
+  for (
+    const projectId of ["", "SkillLink", "a", "skill_link", "skilllink.636b6"]
+  ) {
+    assertThrows(
+      () => validateFirebaseProjectId(projectId),
+      Error,
+      "FIREBASE_PROJECT_ID",
+    );
+  }
+});
+
 Deno.test("missing admin claim is rejected", async () => {
   const handler = createHandler(new MemoryStore([]), regularAuth);
   assertEquals(
@@ -151,6 +181,84 @@ Deno.test("conflicting review is rejected", async () => {
     }),
   );
   assertEquals(response.status, 409);
+});
+
+Deno.test("malformed JSON is rejected with 400", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/review", {
+      method: "POST",
+      headers: { Authorization: "******", "content-type": "application/json" },
+      body: "{",
+    }),
+  );
+  assertEquals(response.status, 400);
+});
+
+Deno.test("unknown suffix route is not treated as an admin route", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(request("/unrelated/list"));
+  assertEquals(response.status, 404);
+});
+
+Deno.test("Supabase function URL prefix routes to the list operation", async () => {
+  const registration: Registration = { id: "one", status: "pending" };
+  const handler = createHandler(new MemoryStore([registration]), adminAuth);
+  const response = await handler(
+    request("/functions/v1/admin-registrations/admin/registrations/list"),
+  );
+  assertEquals(response.status, 200);
+  assertEquals(await response.json(), { registrations: [registration] });
+});
+
+Deno.test("invalid registration ID and long reason are rejected", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const invalidId = await handler(
+    request("/admin/registrations/review", {
+      registrationId: "",
+      decision: "approved",
+    }),
+  );
+  assertEquals(invalidId.status, 400);
+  const longReason = await handler(
+    request("/admin/registrations/review", {
+      registrationId: "one",
+      decision: "rejected",
+      rejectionReason: "x".repeat(1001),
+    }),
+  );
+  assertEquals(longReason.status, 400);
+});
+
+Deno.test("Firestore retries once with a refreshed token after 401", async () => {
+  const originalFetch = globalThis.fetch;
+  const tokens: string[] = [];
+  let refreshCalls = 0;
+  try {
+    globalThis.fetch = (input, init) => {
+      tokens.push(
+        new Headers(init?.headers).get("Authorization") ?? "",
+      );
+      if (tokens.length === 1) {
+        return Promise.resolve(new Response("", { status: 401 }));
+      }
+      return Promise.resolve(
+        Response.json({ documents: [] }),
+      );
+    };
+    const store = new FirestoreRestStore(
+      async (forceRefresh) => {
+        if (forceRefresh) refreshCalls++;
+        return forceRefresh ? "fresh-token" : "expired-token";
+      },
+      "https://firestore.test",
+    );
+    assertEquals(await store.list(), []);
+    assertEquals(refreshCalls, 1);
+    assertEquals(tokens, ["Bearer expired-token", "Bearer fresh-token"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 Deno.test("auth verifier rejects malformed tokens", async () => {

@@ -1,0 +1,2 @@
+[functions.admin-registrations]
+verify_jwt = false

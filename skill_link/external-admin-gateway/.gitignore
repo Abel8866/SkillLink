@@ -1,0 +1,8 @@
+supabase/functions/.env
+supabase/.temp
+.env
+.env.*
+*.json
+!deno.json
+!deno.lock
+service-account*.json
