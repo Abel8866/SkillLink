@@ -211,6 +211,58 @@ Deno.test("Supabase function URL prefix routes to the list operation", async () 
   assertEquals(await response.json(), { registrations: [registration] });
 });
 
+Deno.test("function-name-only prefix routes to the list operation", async () => {
+  const registration: Registration = { id: "two", status: "pending" };
+  const handler = createHandler(new MemoryStore([registration]), adminAuth);
+  const response = await handler(
+    request("/admin-registrations/admin/registrations/list"),
+  );
+  assertEquals(response.status, 200);
+  assertEquals(await response.json(), { registrations: [registration] });
+});
+
+Deno.test("function-name-only prefix routes to the review operation", async () => {
+  const registration: Registration = { id: "one", status: "pending" };
+  const handler = createHandler(new MemoryStore([registration]), adminAuth);
+  const response = await handler(
+    request("/admin-registrations/admin/registrations/review", {
+      registrationId: "one",
+      decision: "approved",
+    }),
+  );
+  assertEquals(response.status, 200);
+});
+
+Deno.test("bare route without any prefix routes correctly", async () => {
+  const registration: Registration = { id: "three", status: "pending" };
+  const handler = createHandler(new MemoryStore([registration]), adminAuth);
+  const response = await handler(
+    request("/admin/registrations/list"),
+  );
+  assertEquals(response.status, 200);
+  assertEquals(await response.json(), { registrations: [registration] });
+});
+
+Deno.test("function-name prefix base URL returns 405 for GET", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/admin-registrations", {
+      method: "GET",
+    }),
+  );
+  assertEquals(response.status, 405);
+});
+
+Deno.test("full Supabase prefix base URL returns 405 for GET", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/functions/v1/admin-registrations", {
+      method: "GET",
+    }),
+  );
+  assertEquals(response.status, 405);
+});
+
 Deno.test("invalid registration ID and long reason are rejected", async () => {
   const handler = createHandler(new MemoryStore([]), adminAuth);
   const invalidId = await handler(
@@ -267,4 +319,183 @@ Deno.test("auth verifier rejects malformed tokens", async () => {
     () => verifyAdminToken("Bearer definitely-not-a-jwt"),
     AuthError,
   );
+});
+
+Deno.test("OPTIONS preflight from allowed Flutter Web origin returns 204 with CORS headers", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/list", {
+      method: "OPTIONS",
+      headers: {
+        Origin: "http://localhost:54321",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "authorization, content-type, accept",
+      },
+    }),
+  );
+  assertEquals(response.status, 204);
+  assertEquals(await response.text(), "");
+  assertEquals(
+    response.headers.get("access-control-allow-origin"),
+    "http://localhost:54321",
+  );
+  assertEquals(
+    response.headers.get("access-control-allow-methods"),
+    "POST, OPTIONS",
+  );
+  assertEquals(
+    response.headers.get("access-control-allow-headers"),
+    "Authorization, Content-Type, Accept",
+  );
+  assertEquals(response.headers.get("access-control-max-age"), "86400");
+  assertEquals(response.headers.get("vary"), "Origin");
+});
+
+Deno.test("OPTIONS preflight from 127.0.0.1 development origin returns 204 with CORS headers", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/list", {
+      method: "OPTIONS",
+      headers: { Origin: "http://127.0.0.1:8080" },
+    }),
+  );
+  assertEquals(response.status, 204);
+  assertEquals(
+    response.headers.get("access-control-allow-origin"),
+    "http://127.0.0.1:8080",
+  );
+});
+
+Deno.test("OPTIONS preflight from configured production origin returns 204 with CORS headers", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth, [
+    "https://admin.skilllink.com",
+  ]);
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/list", {
+      method: "OPTIONS",
+      headers: { Origin: "https://admin.skilllink.com" },
+    }),
+  );
+  assertEquals(response.status, 204);
+  assertEquals(
+    response.headers.get("access-control-allow-origin"),
+    "https://admin.skilllink.com",
+  );
+});
+
+Deno.test("OPTIONS preflight from disallowed origin returns 403 without allow-origin header", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/list", {
+      method: "OPTIONS",
+      headers: { Origin: "https://evil.com" },
+    }),
+  );
+  assertEquals(response.status, 403);
+  assertEquals(response.headers.get("access-control-allow-origin"), null);
+});
+
+Deno.test("POST from allowed origin includes CORS headers on 200 success", async () => {
+  const registration: Registration = { id: "one", status: "pending" };
+  const handler = createHandler(new MemoryStore([registration]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/list", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer test-token",
+        Origin: "http://localhost:3000",
+      },
+    }),
+  );
+  assertEquals(response.status, 200);
+  assertEquals(
+    response.headers.get("access-control-allow-origin"),
+    "http://localhost:3000",
+  );
+  assertEquals(response.headers.get("vary"), "Origin");
+});
+
+Deno.test("POST from allowed origin includes CORS headers on 401 unauthenticated error", async () => {
+  const handler = createHandler(new MemoryStore([]), async () => {
+    throw new AuthError(401, "Authentication is required.");
+  });
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/list", {
+      method: "POST",
+      headers: { Origin: "http://localhost:54321" },
+    }),
+  );
+  assertEquals(response.status, 401);
+  assertEquals(
+    response.headers.get("access-control-allow-origin"),
+    "http://localhost:54321",
+  );
+});
+
+Deno.test("POST from allowed origin includes CORS headers on 403 non-admin error", async () => {
+  const handler = createHandler(new MemoryStore([]), regularAuth);
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/list", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer test-token",
+        Origin: "http://localhost:54321",
+      },
+    }),
+  );
+  assertEquals(response.status, 403);
+  assertEquals(
+    response.headers.get("access-control-allow-origin"),
+    "http://localhost:54321",
+  );
+});
+
+Deno.test("POST from allowed origin includes CORS headers on 400 validation error", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/review", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer test-token",
+        Origin: "http://localhost:54321",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ registrationId: "one", decision: "invalid" }),
+    }),
+  );
+  assertEquals(response.status, 400);
+  assertEquals(
+    response.headers.get("access-control-allow-origin"),
+    "http://localhost:54321",
+  );
+});
+
+Deno.test("POST from allowed origin includes CORS headers on 404 not found error", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/unrelated/path", {
+      method: "POST",
+      headers: { Origin: "http://localhost:54321" },
+    }),
+  );
+  assertEquals(response.status, 404);
+  assertEquals(
+    response.headers.get("access-control-allow-origin"),
+    "http://localhost:54321",
+  );
+});
+
+Deno.test("POST from disallowed origin returns 403 without allow-origin header", async () => {
+  const handler = createHandler(new MemoryStore([]), adminAuth);
+  const response = await handler(
+    new Request("https://gateway.test/admin/registrations/list", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer test-token",
+        Origin: "https://unauthorized-domain.com",
+      },
+    }),
+  );
+  assertEquals(response.status, 403);
+  assertEquals(response.headers.get("access-control-allow-origin"), null);
 });

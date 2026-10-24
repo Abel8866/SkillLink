@@ -1,4 +1,3 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 
 import '../services/admin_service.dart';
@@ -47,11 +46,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Registration $decision.')));
-    } on FirebaseFunctionsException catch (error, stackTrace) {
-      debugPrint(
-        '[AdminDashboard] Review failed (code=${error.code}): '
-        '${error.message ?? error}',
-      );
+    } on AdminGatewayException catch (error) {
+      debugPrint('[AdminDashboard] Review failed: ${error.message}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error, stackTrace) {
+      debugPrint('[AdminDashboard] Review failed: $error');
       debugPrintStack(stackTrace: stackTrace);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,17 +112,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         future: _registrations,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            final error = snapshot.error;
+            final message = error is AdminGatewayException
+                ? error.message
+                : 'Check your administrator access and connection.';
             return _message(
               context,
               'Could not load registrations.',
-              'Check your administrator access and connection.',
+              message,
               retry: true,
             );
           }
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          final registrations = snapshot.data!;
+
+          final registrations = snapshot.data;
+
+          if (registrations == null) {
+            return _message(
+              context,
+              'Could not load registrations.',
+              'The registration data was empty or unavailable. Please try again.',
+              retry: true,
+            );
+          }
           final pending = registrations
               .where((item) => item['status'] == 'pending')
               .toList();

@@ -35,3 +35,29 @@ export function getFirestoreBaseUrl(): string {
 }
 
 export const MAX_REGISTRATIONS = 200;
+
+export function getAllowedOrigins(): string[] {
+  try {
+    const origins = Deno.env.get("ALLOWED_ORIGINS");
+    if (!origins) return [];
+    return origins
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter((origin) => origin.length > 0);
+  } catch (error) {
+    if (error instanceof Error && error.name === "NotCapable") {
+      return [];
+    }
+    throw error;
+  }
+}
+
+export function isAllowedOrigin(
+  origin: string | null,
+  customAllowedOrigins: string[] = getAllowedOrigins(),
+): boolean {
+  if (!origin) return false;
+  if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
+  if (/^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+  return customAllowedOrigins.includes(origin);
+}

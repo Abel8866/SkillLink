@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../data/sample_providers.dart'
+    hide ProviderCategory, providerCategories;
 import '../data/service_categories.dart';
 import '../models/service_provider.dart';
 import '../services/provider_repository.dart';
@@ -108,7 +110,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final results = _filterProviders(snapshot.data!);
+          final providers = snapshot.data!.isNotEmpty ? snapshot.data! : sampleProviders;
+          final results = _filterProviders(providers);
           return Column(
             children: [
               Padding(

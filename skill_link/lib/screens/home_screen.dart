@@ -4,7 +4,9 @@ library;
 
 import 'package:flutter/material.dart';
 
-import '../data/service_categories.dart';
+import '../data/sample_providers.dart'
+    hide ProviderCategory, providerCategories;
+import 'package:skill_link/data/service_categories.dart';
 import '../models/service_provider.dart';
 import '../services/provider_repository.dart';
 import '../screens/provider_registration_screen.dart';
@@ -23,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final List<ProviderCategory> _displayedCategories;
   int _providerStreamKey = 0;
+  bool _usingDemoData = false;
 
   @override
   void initState() {
@@ -133,7 +136,16 @@ class _HomeScreenState extends State<HomeScreen> {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
-            final providers = snapshot.data!;
+            final firestoreProviders = snapshot.data!;
+            // Fall back to sample/demo data when Firestore has no providers.
+            final List<ServiceProvider> providers;
+            if (firestoreProviders.isNotEmpty) {
+              providers = firestoreProviders;
+              _usingDemoData = false;
+            } else {
+              providers = sampleProviders;
+              _usingDemoData = true;
+            }
             final featured = providers
                 .where((p) => p.isFeatured)
                 .take(4)
@@ -145,6 +157,47 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Demo-mode indicator (shown when using sample data)
+                  if (_usingDemoData)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.tertiaryContainer
+                              .withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.tertiary
+                                .withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline_rounded,
+                              size: 18,
+                              color: theme.colorScheme.onTertiaryContainer,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Showing sample providers for demonstration. '
+                                'Real providers will appear once registered.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onTertiaryContainer,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                   // Welcome section
                   Text(
                     'Find the right professional',
