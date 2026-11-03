@@ -49,6 +49,10 @@ See the [complete project documentation](docs/PROJECT_DOCUMENTATION.md) for
 the architecture, Firebase data model, security boundaries, admin gateway
 API, local setup, testing, and deployment guidance.
 
+See the [project and team information](docs/SUBMISSION_PROJECT_AND_TEAM_INFORMATION.md)
+for the submission summary, main features, team members, CTC IDs, and
+responsibilities.
+
 ---
 
 ## Getting Started
