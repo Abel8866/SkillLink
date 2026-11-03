@@ -43,6 +43,12 @@ skill_link/
 └── pubspec.yaml         # Project dependencies and configuration
 ```
 
+## Documentation
+
+See the [complete project documentation](docs/PROJECT_DOCUMENTATION.md) for
+the architecture, Firebase data model, security boundaries, admin gateway
+API, local setup, testing, and deployment guidance.
+
 ---
 
 ## Getting Started
