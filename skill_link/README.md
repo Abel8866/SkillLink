@@ -55,6 +55,12 @@ responsibilities.
 
 ---
 
+## Presentation Video
+
+Watch the [SkillLink presentation video](https://drive.google.com/file/d/1Xnkle-JGXGHG5QxGEbpBujWwcKi-zIMo/view?usp=sharing).
+
+---
+
 ## Getting Started
 
 ### Prerequisites
